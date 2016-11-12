@@ -19,18 +19,18 @@ public:
     typedef pointer                                  iterator;
     typedef const_pointer                            const_iterator;
     typedef myvector<T, Allocator>                   vector_type;
-    myvector()
-            : m_begin(NULL), m_end(NULL), m_end_cap(NULL) {}
+    explicit myvector(const allocator_type &alloc = allocator_type())
+            : m_begin(NULL), m_end(NULL), m_end_cap(NULL), m_alloc(alloc) {}
     template <class InputIterator>
-    myvector(InputIterator first, InputIterator last)
-            : m_begin(NULL), m_end(NULL), m_end_cap(NULL) {
+    myvector(InputIterator first, InputIterator last, const allocator_type &alloc = allocator_type())
+            : m_begin(NULL), m_end(NULL), m_end_cap(NULL), m_alloc(alloc) {
         assign(first, last);
     }
     myvector(const vector_type &x)
-            : m_begin(NULL), m_end(NULL), m_end_cap(NULL) {
+            : m_begin(NULL), m_end(NULL), m_end_cap(NULL), m_alloc(x.m_alloc) {
         assign(x.begin(), x.end());
     }
-    myvector& operator = (const myvector &x) {
+    myvector &operator = (const vector_type &x) {
         assign(x.begin(), x.end());
     }
     ~myvector() {
@@ -44,10 +44,9 @@ public:
             push_back(*first);
     }
     void clear() {
-        Allocator a;
         for (pointer temp = m_begin; temp != m_end; ++temp)
-            a.destroy(temp);
-        a.deallocate(m_begin, m_end_cap - m_begin);
+            m_alloc.destroy(temp);
+        m_alloc.deallocate(m_begin, m_end_cap - m_begin);
         m_begin = m_end = m_end_cap = NULL;
     }
     iterator       begin()  { return m_begin; }
@@ -57,12 +56,12 @@ public:
     const_iterator cbegin() const { return m_begin; }
     const_iterator cend()   const { return m_end; }
 
-    size_t size() const {
+    std::size_t size() const {
         if (m_begin == NULL)
             return 0;
         return m_end - m_begin;
     }
-    size_t capacity() const {
+    std::size_t capacity() const {
         if (m_begin == NULL)
             return 0;
         return m_end_cap - m_begin;
@@ -71,44 +70,76 @@ public:
         return size() == 0;
     }
 
-    reference operator[](size_t n) {
+    reference front() {
+        return m_begin[0];
+    }
+    const_reference front() const {
+        return m_begin[0];
+    }
+    reference back() {
+        return m_end[-1];
+    }
+    const_reference back() const {
+        return m_begin[-1];
+    }
+
+    reference operator [] (std::size_t n) {
         return m_begin[n];
     }
-    const_reference operator[](size_t n) const {
+    const_reference operator [] (std::size_t n) const {
         return m_begin[n];
+    }
+    vector_type &operator += (const vector_type &x) {
+        insert(end(), x.begin(), x.end());
+        return *this;
+    }
+    bool operator == (const vector_type &x) const {
+        const_iterator iter1, iter2;
+        for (iter1 = cbegin(), iter2 = x.cbegin(); iter1 != cend() && iter2 != x.cend() && *iter1 == *iter2; ++iter1, ++iter2);
+        if (iter1 == cend() && iter2 == x.cend())
+            return true;
+        return false;
+    }
+    bool operator != (const vector_type &x) const {
+        return (*this == x);
+    }
+
+    vector_type operator + (const vector_type &x) const {
+        vector_type temp(*this);
+        temp.insert(temp.end(), x.begin(), x.end());
+        return temp;
     }
 
     iterator insert(const_iterator position, const value_type &x) {
-        const size_t INITIAL_SIZE = 16;
-        size_t pos = position - m_begin;
-        Allocator a;
+        const std::size_t INITIAL_SIZE = 16;
+        std::size_t pos = position - m_begin;
         if (m_begin == NULL) {
-            m_end = m_begin = a.allocate(INITIAL_SIZE);
+            m_end = m_begin = m_alloc.allocate(INITIAL_SIZE);
             m_end_cap = m_begin + INITIAL_SIZE;
         }
         if (m_end == m_end_cap) {
-            size_t length = size();
-            pointer new_begin = a.allocate(length * 2);
-            for (size_t i = 0; i < length; ++i) {
-                a.construct(new_begin + i, m_begin[i]);
-                a.destroy(m_begin + i);
+            std::size_t length = size();
+            pointer new_begin = m_alloc.allocate(length * 2);
+            for (std::size_t i = 0; i < length; ++i) {
+                m_alloc.construct(new_begin + i, m_begin[i]);
+                m_alloc.destroy(m_begin + i);
             }
-            a.deallocate(m_begin, length);
+            m_alloc.deallocate(m_begin, length);
             m_begin = new_begin;
             m_end = m_begin + length;
             m_end_cap = m_begin + length * 2;
         }
         for (pointer temp = m_end; temp != m_begin + pos; --temp) {
-            a.construct(temp, *(temp - 1));
-            a.destroy(temp - 1);
+            m_alloc.construct(temp, *(temp - 1));
+            m_alloc.destroy(temp - 1);
         }
-        a.construct(m_begin + pos, x);
+        m_alloc.construct(m_begin + pos, x);
         ++m_end;
         return m_begin + pos;
     }
     template <class InputIterator>
     iterator insert(const_iterator position, InputIterator first, InputIterator last) {
-        size_t pos = position - m_begin, i = pos;
+        std::size_t pos = position - m_begin, i = pos;
         for(; first != last; ++first, ++i)
             insert(m_begin + i, *first);
         return m_begin + pos;
@@ -117,24 +148,48 @@ public:
     void push_back(const value_type &u) {
         insert(end(), u);
     }
+    void pop_back() {
+        erase(end() - 1);
+    }
 
     iterator erase(const_iterator position) {
-        Allocator a;
-        a.destroy(position);
+        m_alloc.destroy(position);
         --m_end;
         for (pointer temp = m_begin + (position - m_begin); temp != m_end; ++temp) {
-            a.construct(temp, *(temp + 1));
-            a.destroy(temp + 1);
+            m_alloc.construct(temp, *(temp + 1));
+            m_alloc.destroy(temp + 1);
         }
+        return m_begin + (position - m_begin);
     }
     iterator erase(const_iterator first, const_iterator last) {
-        size_t n = last - first;
-        for (size_t i = 0; i < n; ++i)
+        std::size_t n = last - first;
+        for (std::size_t i = 0; i < n; ++i)
             erase(first);
+        return m_begin + (first - m_begin);
     }
 
 private:
     pointer m_begin, m_end, m_end_cap;
+    allocator_type m_alloc;
 };
+
+
+template<typename CharT, typename T, typename Allocator>
+std::basic_ostream<CharT> &operator << (std::basic_ostream<CharT> &out, const myvector<T, Allocator> &x)
+{
+    bool first = true;
+    out << out.widen('[');
+    for (typename myvector<T, Allocator>::const_iterator iter = x.cbegin(); iter != x.cend(); ++iter) {
+        if (first) {
+            out << *iter;
+            first = false;
+        }
+        else
+            out << out.widen(',') << out.widen(' ') << *iter;
+    }
+    return out << out.widen(']');
+};
+
+
 
 #endif //MYVECTOR_MYVECTOR_H

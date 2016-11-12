@@ -1,26 +1,25 @@
 #ifndef MY_LIST_H_INCLUDE
 #define MY_LIST_H_INCLUDE
 
-#include <functional>  // for std::less
 #include <memory>      // for std::allocator
+
+#include "myfunctional.h"
 
 template<typename T, class Allocator>
 class mylist_node {
 public:
     mylist_node<T, Allocator> *prev, *next;
     T *data;
+    Allocator alloc;
 
-    mylist_node(): prev(NULL), next(NULL), data(NULL) {}
-    mylist_node(const T &orig): prev(NULL), next(NULL) {
-        Allocator a;
-        data = a.allocate(1);
-        a.construct(data, orig);
+    mylist_node(const Allocator &a) : prev(NULL), next(NULL), data(NULL), alloc(a) {}
+    mylist_node(const T &orig, const Allocator &a) : prev(NULL), next(NULL), alloc(a) {
+        data = alloc.allocate(1);
+        alloc.construct(data, orig);
     }
     ~mylist_node() {
-        if (data) {
-            Allocator a;
-            a.destroy(data);
-        }
+        if (data)
+            alloc.destroy(data);
     }
 private:
     mylist_node(const mylist_node &orig);
@@ -42,23 +41,22 @@ public:
     friend list_type;
     friend const_iterator;
 
-    mylist_iterator(): node(NULL) {}
-    mylist_iterator(node_type *node): node(node) {}
-    mylist_iterator(const iterator &other): node(other.node) {}
+    mylist_iterator() : node(NULL) {}
+    mylist_iterator(node_type *node) : node(node) {}
+    mylist_iterator(const iterator &other) : node(other.node) {}
     mylist_iterator &operator = (const iterator &other) {
         node = other.node;
         return *this;
     }
-    ~mylist_iterator() {}
     void swap(iterator &other) {
         node_type *temp = other.node;
         other.node = node;
         node = temp;
     }
-    T &operator * () const {
+    value_type &operator * () const {
         return *node->data;
     }
-    T &operator -> () const {
+    value_type *operator -> () const {
         return node->data;
     }
     bool operator == (const const_iterator &other) const {
@@ -102,16 +100,14 @@ public:
     friend list_type;
     friend iterator;
 
-    mylist_iterator(): node(NULL) {}
-    mylist_iterator(node_type *node): node(node) {}
-    mylist_iterator(const iterator &other): node(other.node) {}
-    mylist_iterator(const const_iterator &other): node(other.node) {}
+    mylist_iterator() : node(NULL) {}
+    mylist_iterator(node_type *node) : node(node) {}
+    mylist_iterator(const iterator &other) : node(other.node) {}
+    mylist_iterator(const const_iterator &other) : node(other.node) {}
     mylist_iterator &operator = (const const_iterator &other) {
         node = other.node;
         return *this;
     }
-    ~mylist_iterator() {}
-
     void swap(const_iterator &other) {
         node_type *temp = other.node;
         other.node = node;
@@ -120,7 +116,7 @@ public:
     value_type &operator * () const {
         return *node->data;
     }
-    value_type &operator -> () const {
+    value_type *operator -> () const {
         return node->data;
     }
 
@@ -162,25 +158,28 @@ public:
     typedef mylist_iterator<value_type, Allocator>       iterator;
     typedef mylist_iterator<const value_type, Allocator> const_iterator;
 
-    mylist() {
-        root = new node_type();
+    explicit mylist(const Allocator &alloc = Allocator())
+            : alloc(alloc) {
+        root = new node_type(alloc);
         root->next = root->prev = root;
     }
-    template <class InputIterator>
-    mylist(InputIterator first, InputIterator last) {
-        root = new node_type();
+    template <typename InputIterator>
+    mylist(InputIterator first, InputIterator last, const Allocator &alloc = Allocator())
+            : alloc(alloc) {
+        root = new node_type(alloc);
         root->next = root->prev = root;
         assign(first, last);
     }
-    mylist(const list_type &orig) {
-        root = new node_type();
+    mylist(const list_type &orig)
+            : alloc(orig.alloc) {
+        root = new node_type(alloc);
         root->next = root->prev = root;
         assign(orig.begin(), orig.end());
     }
     mylist & operator = (const list_type &orig) {
         assign(orig.begin(), orig.end());
     }
-    ~mylist() {
+    virtual ~mylist() {
         clear();
         delete root;
     }
@@ -195,14 +194,18 @@ public:
         while(root->next != root)
             remove(root->next);
     }
-    void erase(const_iterator iter) {
+    iterator erase(const_iterator iter) {
+        iterator temp_iter(iter.node->next);
         remove(iter.node);
+        return temp_iter;
     }
     void push_back(const value_type &value) {
-        insert(root, new node_type(value));
+        insert(root, new node_type(value, alloc));
     }
-    void insert(iterator iter, const value_type &value) {
-        insert(iter->node,  new node_type(value));
+    iterator insert(iterator iter, const value_type &value) {
+        node_type *node = new node_type(value, alloc);
+        insert(iter->node, node);
+        return iterator(node);
     }
     iterator begin() {
         return iterator(root->next);
@@ -222,12 +225,12 @@ public:
     const_iterator cend() const {
         return const_iterator(root);
     }
-    template<typename Func = std::less<value_type> >
+    template<typename Func = myless<value_type> >
     void sort(Func func = Func()) {
         node_type *temp;
         for (node_type *outer = root; outer->prev != root->next; outer = outer->prev)
             for (node_type *inner = root->next; inner->next != outer; inner = inner->next) {
-                if (!func(inner->data, inner->next->data)) {
+                if (!func(*inner->data, *inner->next->data)) {
                     temp = inner->next;
                     inner->prev->next = temp;
                     temp->next->prev = inner;
@@ -253,5 +256,6 @@ protected:
     }
 private:
     node_type *root;
+    Allocator alloc;
 };
 #endif

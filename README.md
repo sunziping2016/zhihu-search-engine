@@ -6,12 +6,13 @@ However, I've really missing them a lot, so I decide to reinvent them.
 I've implemented these following things:
 * `myvector`: dynamic array similar to `std::vector`
 * `mylist`: doubly linked circular list similar to `std::list`
-
-And I am going to implement the following things:
-* `mystring`: inherited from `myvector` and similar to `std::string`
 * `myhashset`: hash set similar to `std::unordered_set`
 * `myhashmap`: hash map inherited from `myhashset` and similar to `std::unordered_map` 
+* `mystring`: inherited from `myvector` and similar to `std::string`
 * `mystack`: stack adaptor similar to `std::stack`
+* `mypair`: simple pair similar to `std::pair`
+
+And I am going to implement the following things:
 
 Every container has its corresponding iterator. And everything is compatible with STL. However,
 due to the low version of teaching assistant's c++ compiling environment, I'm afraid that I
