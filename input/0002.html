@@ -1,0 +1,146 @@
+<!doctype html>
+
+
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>救命的气囊何时弹出，背后是一套复杂的系统</title>
+<meta name="apple-itunes-app" content="app-id=639087967, app-argument=zhihudaily://story/8840152">
+<meta name="viewport" content="user-scalable=no, width=device-width">
+<link rel="stylesheet" href="/css/share.css?v=5956a">
+
+
+<script src="http://static.daily.zhihu.com/js/modernizr-2.6.2.min.js"></script>
+<link rel="canonical" href="http://daily.zhihu.com/story/8840152"/>
+<base target="_blank">
+<script type="text/javascript">
+if (localStorage && localStorage.getItem('hideDownloadBanner') !== 'true') {
+document.documentElement.className += ' show-download-banner';
+}
+</script>
+</head>
+<body>
+
+<div class="global-header">
+<div class="main-wrap">
+<div class="download">
+<a href="https://itunes.apple.com/cn/app/id639087967?mt=8" class="button" data-device="ios"><i class="sprite-ico-Button_iPhone2x"></i> <span>iPhone</span></a>
+<a href="/download/android" class="button" data-device="android-local"><i class="sprite-ico-Button_Android2x"></i> <span>Android</span></a>
+</div>
+<a href="/" target="_self" title="知乎日报"><i class="web-logo"></i></a>
+</div>
+</div>
+<div class="header-for-mobile">
+<a href="/download" class="header-for-mobile-download-link">
+<span class="header-for-mobile-btn">立即下载</span>
+<img class="header-for-mobile-logo-img" src="http://static.daily.zhihu.com/img/app-logo.png"/>
+<span class="header-for-mobile-title">知乎日报</span>
+<span class="header-for-mobile-meta">每日提供高质量新闻资讯</span>
+</a>
+</div>
+<div class="main-wrap content-wrap">
+<div class="headline">
+
+<div class="img-wrap">
+<h1 class="headline-title">救命的气囊何时弹出，背后是一套复杂的系统</h1>
+
+
+<span class="img-source">图片：Mic / CC BY</span>
+
+
+<img src="http://pic4.zhimg.com/625ac33ce46d4102d950bc907d8512c7.jpg" alt="">
+<div class="img-mask"></div>
+</div>
+
+
+</div>
+
+<div class="content-inner">
+
+
+
+
+<div class="question">
+<h2 class="question-title">汽车安全气囊怎么选择释放时机？</h2>
+
+<div class="answer">
+
+<div class="meta">
+<img class="avatar" src="http://pic2.zhimg.com/1917cae6a9fae611e6bfe0bf693fffc5_is.jpg">
+<span class="author">小梅</span>
+</div>
+
+<div class="content">
+<p>题主的问题涉及到 ACU（安全气囊控制装置） 的标定策略，这也是开发阶段主机厂和供应商讨论最多的话题。因为涉及到结构，硬件软件，算法，所以不能太深究，这里就简单介绍下：</p>
+<ol>
+<li>了解下典型的 SRS 系统 气囊（前，侧）， 气囊控制器 ACU，安全带预警，外围传感器 sat（加速度 gsat，压力 psat），此外 ACU 内部会内置一个 high G 的双轴传感器（xy 轴，或者 xy 轴转过 45&deg;布置），外围传感器不是必须的（只有前碰），但是 ACU 得内置传感器是必须要有的。</li>
+<li>再说一下典型的碰撞类型，按角度分：正面前碰（含偏置碰），角碰，侧碰，后碰， 按速度分有高速，中速，低速。 此外还有一类特殊的碰撞叫误用，misuse。</li>
+<li>相对速度， ACU 感知到的是相对速度，两辆 25 公里车对撞，ACU 会认为是 50 公里碰撞。所以会看到高速公路上碰撞，但是气囊没有点爆的特列。</li>
+<li>然后介绍一下碰撞策略：门槛实验（Margin）：低速不点爆，低速必须点爆，角度不点爆等，误用实验必须不点爆，高速实验必须点爆。</li>
+<li>不同的碰撞类型，碰撞速度列出来就组成了一个庞大的<strong>碰撞矩阵，ACU 的点火时间就是对应着这个碰撞矩阵。</strong></li>
+<li>所以题主的问题需要细化成如下 ACU 侦测到碰撞，ACU 判断碰撞类型，ACU 确认碰撞并且发出点火指令。</li>
+<li>对于一个典型的前碰来说，ACU 的内置传感器通过车身速度的变化感知到加速度信号，通过对加速度的数据分析，来判断碰撞类型。ACU 只能识别几种典型的碰撞类型，现实中千差万别的碰撞最后都会简化为这几种典型的碰撞类型，比如 50 公里整碰，56/64 公里偏置碰等实际开发中被动安全也是按照这几种典型的碰撞类型来开发的。</li>
+<li>点火时间的确定分为两种理论时间和实际点火时间，理论时间哪里来，第一版的时间是工程师拍脑袋定的，不过不是随便拍，是基于长期大量的实验经验上拍出来的。给定一个 50 公里，有经验的工程师脑子里就有一个大概的时间，比如基于 EuroNCAP, USNCAP, CNCAP 5 星的要求，大多数 50 公里整碰的时间回落在一个区间内。</li>
+<li>实际的点火时间比较复杂，但是如果只是<strong>单纯讨论一种工况</strong>的话，那么随便什么时间都可以标到。如果只考虑 50 公里正碰，想标到多少时间，只要在 ACU 硬件范围里，都可以标到。你想 14ms 就 14，想 20 就 20. 但是这毫无意义，如果只有这一个标定参数，那么 50 公里的碰撞和 50 公里的急刹车对于 ACU 来说会被判断成一个类型，因为在急刹的时候点爆气囊，这是不允许看到的。结合前面提到的碰撞矩阵，ACU 的点火时间就需要考虑完整的碰撞矩阵。</li>
+<li>点火时间的优化 ，理论时间和实际点火时间会有出入，并且此时的理论点火时间需要根据特定的车型和气囊安全带系统进行优化，以便达到最优的保护效果。此外气囊系统也会根据实际的点火时间，进行稍微的优化。</li>
+<li>此外必需要考虑到公差，因为就算是同一条产线上下来的车，50 公里碰撞出来的信号也不是完全一样的。需要有一个公差范围。这里也是考验主机厂工艺水平，也是国内主机厂和国外主机厂差别很大的一个地方。 公差范围越小，点火时间越稳定，越容易提前。</li>
+<li>点火时间标定策略冲突，随着碰撞矩阵的变大，点火时间标定策略就会出现各种冲突矛盾，前面提到的 50 公里急刹和 50 公里正碰就一个列子，此外还有过铁轨等，具体表现在安全性要求气囊必需越早点爆越好，但是稳定性要求 ACU 必需要有足够长的时间来判断碰撞类型再点爆。</li>
+<li>综上所述，ACU 的标定需要大量的实验来支撑，理论上实验越多，ACU 表现越好，但是也越难标，工作量是几何级数增加。最后点火时间的确定需要供应商和主机厂一起确定，是更靠近安全性还是更靠近稳定性。</li>
+<li>最后要说一下心理作用，对于气囊是不是该爆，对于终端用户来说体验是不一样的，一个富二代开着豪车气囊没爆，他可能会投诉气囊不可靠。 一个普通人开一般的车气囊没爆，人也没事，他可能会庆幸省下了一套气囊维修费。</li>
+<li>最后说一句：被动安全系统在牛逼， 请一定要系安全带。</li>
+</ol>
+</div>
+</div>
+
+
+<div class="view-more"><a target="_self" href="http://www.zhihu.com/question/19868577">查看知乎原文<span class="js-question-holder" data-aid="88285"></span></a></div>
+
+</div>
+
+
+
+<div class="question">
+<div class="answer">
+<div class="content">
+<p>客官，这篇文章有意思吗？</p>
+<p dir="ltr"><a href="https://daily.zhihu.com/download?utm_source=article_suffix&amp;utm_campaign=tuijian&amp;utm_medium=daily_share">好玩！下载 App 接着看 (๑&bull;ㅂ&bull;) ✧</a></p>
+<p><a href="/story/8808354?utm_source=other_article&amp;utm_campaign=tuijian&amp;utm_medium=daily_share">再逛逛吧 ˊ_&gt;ˋ</a></p>
+</div>
+</div>
+</div>
+
+</div>
+<div class="qr">
+<h2 class="heading">扫描二维码下载知乎日报</h2>
+<span class="subheading">支持 iOS 和 Android</span>
+<div class="qr-wrap">
+<img src="http://static.daily.zhihu.com/img/qr1.png" alt="二维码下载知乎日报" width="148" height="148">
+</div>
+</div>
+</div>
+
+<div class="bottom-wrap">
+<div class="bottom-recommend">
+<span class="bottom-recommend-title">阅读更多</span>
+<a class="recommend-link" href="http://daily.zhihu.com/story/8831233" data-story="8831233">
+
+<span style="background-image:url(http://pic4.zhimg.com/46d08934557590c9be18f4a2bf1ff4cf.jpg)" class="link-image"></span>
+
+以为在法国酒庄工作会喝很多酒，没想到有时臭得没人靠近
+</a>
+<a class="bottom-recommend-download-link" href="/download">
+下载 「知乎日报」 客户端查看更多
+</a>
+</div>
+</div>
+
+<div class="footer">
+<a href="http://www.zhihu.com/">知乎网</a> &middot; &copy; 2016 知乎
+</div>
+<script src="http://static.daily.zhihu.com/js/jquery.1.9.1.js"></script>
+<script src="/js/share.js?v=49768"></script>
+
+</body>
+</html>

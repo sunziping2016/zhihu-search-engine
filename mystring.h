@@ -32,6 +32,11 @@ public:
         return temp;
     }
 
+    typename vector_type::const_pointer c_str() {
+        this->push_back('\0');
+        this->pop_back();
+        return this->cbegin();
+    }
 };
 
 template<typename CharT1, typename CharT2, typename Traits, typename Allocator>
@@ -69,8 +74,17 @@ template<typename CharT, typename Traits, typename Allocator>
 std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in, mybasic_string<CharT, Traits, Allocator> &str) {
     return getline(in, str, in.widen('\n'));
 };
+template<typename CharT, typename Traits, typename Allocator>
+std::basic_istream<CharT, Traits> &getall(std::basic_istream<CharT, Traits> &in, mybasic_string<CharT, Traits, Allocator> &str) {
+    int ch;
+    while ((ch = in.get()) != EOF)
+        str.push_back(ch);
+    return in;
+};
 
-typedef mybasic_string<char> mystring;
-typedef mybasic_string<wchar_t> mywstring;
+typedef mybasic_string<char>     mystring;
+typedef mybasic_string<wchar_t>  mywstring;
+typedef mybasic_string<char16_t> myu16string;
+typedef mybasic_string<char32_t> myu32string;
 
 #endif //HTML_PARSER_MYSTRING_H
