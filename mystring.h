@@ -57,7 +57,7 @@ public:
             } else if ((*this)[pos] == str[k]) {
                 ++pos;
                 ++k;
-                if (k == str.size()) {
+                if (static_cast<std::size_t>(k) == str.size()) {
                     return pos - str.size();
                 }
             } else
@@ -118,10 +118,8 @@ template<typename CharT, typename Traits, typename Allocator>
 std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in, mybasic_string<CharT, Traits, Allocator> &str, CharT delim) {
     int ch;
     str.clear();
-    if (ch != EOF) {
-        while ((ch = in.get()) != EOF && ch != delim)
-            str.push_back(ch);
-    }
+    while ((ch = in.get()) != EOF && ch != delim)
+        str.push_back(ch);
     return in;
 };
 

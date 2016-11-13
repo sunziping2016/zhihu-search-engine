@@ -41,19 +41,19 @@ mystring utf32_to_utf8(const myu32string &str) {
         if (cp < 0x7f)
             result.push_back((char) cp);
         else if (cp < 0x7ff) {
-            result.push_back((char) (cp >> 6 | 0xc0));
-            result.push_back((char) (cp & 0x3f | 0x80));
+            result.push_back((char) ((cp >> 6) | 0xc0));
+            result.push_back((char) ((cp & 0x3f) | 0x80));
         }
         else if (cp < 0xffff) {
-            result.push_back((char) (cp >> 12 | 0xe0));
-            result.push_back((char) (cp >> 6 & 0x3f | 0x80));
-            result.push_back((char) (cp & 0x3f | 0x80));
+            result.push_back((char) ((cp >> 12) | 0xe0));
+            result.push_back((char) (((cp >> 6) & 0x3f) | 0x80));
+            result.push_back((char) ((cp & 0x3f) | 0x80));
         }
         else {
-            result.push_back((char) (cp >> 18 | 0xf0));
-            result.push_back((char) (cp >> 12 & 0x3f | 0x80));
-            result.push_back((char) (cp >> 12 & 0x3f | 0x80));
-            result.push_back((char) (cp & 0x3f | 0x80));
+            result.push_back((char) ((cp >> 18) | 0xf0));
+            result.push_back((char) (((cp >> 12) & 0x3f) | 0x80));
+            result.push_back((char) (((cp >> 6) & 0x3f) | 0x80));
+            result.push_back((char) ((cp & 0x3f) | 0x80));
 
         }
     }

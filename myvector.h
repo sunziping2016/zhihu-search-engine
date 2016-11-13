@@ -32,6 +32,7 @@ public:
     }
     myvector &operator = (const vector_type &x) {
         assign(x.begin(), x.end());
+        return *this;
     }
     ~myvector() {
         clear();

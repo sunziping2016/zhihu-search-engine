@@ -309,7 +309,7 @@ ostream &operator << (ostream &out, const html_node &node) {
         }
     }
 
-    if (node.type == html_node::DOCUMENT || node.type == html_node::TAG && !node.children.empty()) {
+    if ((node.type == html_node::DOCUMENT || node.type == html_node::TAG) && !node.children.empty()) {
         out << ", child: [ ";
         for (size_t i = 0; i < node.children.size(); ++i) {
             if (i != 0)
