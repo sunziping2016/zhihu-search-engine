@@ -157,6 +157,8 @@ public:
     typedef mylist_node<value_type, Allocator>           node_type;
     typedef mylist_iterator<value_type, Allocator>       iterator;
     typedef mylist_iterator<const value_type, Allocator> const_iterator;
+    typedef typename Allocator::reference                reference;
+    typedef typename Allocator::const_reference          const_reference;
 
     explicit mylist(const Allocator &alloc = Allocator())
             : alloc(alloc) {
@@ -224,6 +226,18 @@ public:
     }
     const_iterator cend() const {
         return const_iterator(root);
+    }
+    reference front() {
+        return *root->next->data;
+    }
+    const_reference front() const {
+        return *root->next->data;
+    }
+    reference back() {
+        return *root->prev->data;
+    }
+    const_reference back() const {
+        return *root->prev->data;
     }
     template<typename Func = myless<value_type> >
     void sort(Func func = Func()) {

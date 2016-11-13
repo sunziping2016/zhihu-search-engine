@@ -5,8 +5,6 @@
 #ifndef HTML_PARSER_MYSTRING_H
 #define HTML_PARSER_MYSTRING_H
 
-#include <cctype> // for isspace
-
 #include "myvector.h"
 #include "myfunctional.h"
 
@@ -17,7 +15,10 @@ public:
     typedef myvector<CharT>       vector_type;
 
     mybasic_string() {}
-    mybasic_string(const CharT *s) {
+    template <class InputIterator>
+    mybasic_string(InputIterator first, InputIterator last) : vector_type(first, last) {}
+    template<typename CharT2>
+    mybasic_string(const CharT2 *s) {
         while (*s)
             this->push_back(*s++);
     }
@@ -26,18 +27,56 @@ public:
         this->insert(this->end(), x.begin(), x.end());
         return *this;
     }
-    string_type operator + (const string_type &x) const {
-        string_type temp(*this);
-        temp.insert(temp.end(), x.begin(), x.end());
-        return temp;
-    }
 
     typename vector_type::const_pointer c_str() {
         this->push_back('\0');
         this->pop_back();
         return this->cbegin();
     }
+
+    string_type substr(size_t pos, size_t count) const {
+        return string_type(this->begin() + pos, this->begin() + pos + count);
+    }
 };
+
+template<typename CharT>
+mybasic_string<CharT> operator + (const mybasic_string<CharT> &lhs, const mybasic_string<CharT> &rhs) {
+    mybasic_string<CharT> temp(lhs);
+    temp.insert(temp.end(), rhs.begin(), rhs.end());
+    return temp;
+}
+
+template<typename CharT1, typename CharT2>
+mybasic_string<CharT2> operator + (const CharT1 *lhs, const mybasic_string<CharT2> &rhs) {
+    return mybasic_string<CharT2>(lhs) + rhs;
+}
+
+template<typename CharT1, typename CharT2>
+mybasic_string<CharT1> operator + (const mybasic_string<CharT1> &lhs, const CharT2 *rhs) {
+    return lhs + mybasic_string<CharT1>(rhs);
+}
+
+template<typename CharT1, typename CharT2>
+bool operator == (const CharT1 *lhs, const mybasic_string<CharT2> &rhs) {
+    return mybasic_string<CharT2>(lhs) == rhs;
+}
+
+template<typename CharT1, typename CharT2>
+bool operator == (const mybasic_string<CharT1> &lhs, const CharT2 *rhs) {
+    return lhs == mybasic_string<CharT1>(rhs);
+}
+
+
+template<typename CharT1, typename CharT2>
+bool operator != (const CharT1 *lhs, const mybasic_string<CharT2> &rhs) {
+    return mybasic_string<CharT2>(lhs) != rhs;
+}
+
+template<typename CharT1, typename CharT2>
+bool operator != (const mybasic_string<CharT1> &lhs, const CharT2 *rhs) {
+    return lhs != mybasic_string<CharT1>(rhs);
+}
+
 
 template<typename CharT1, typename CharT2, typename Traits, typename Allocator>
 std::basic_ostream<CharT1> &operator << (std::basic_ostream<CharT1> &out, const mybasic_string<CharT2, Traits, Allocator> str)
@@ -51,7 +90,6 @@ template<typename CharT, typename Traits, typename Allocator>
 std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in, mybasic_string<CharT, Traits, Allocator> &str, CharT delim) {
     int ch;
     str.clear();
-    while ((ch = in.get()) != EOF && isspace(ch));
     if (ch != EOF) {
         str.push_back(static_cast<CharT>(ch));
         while ((ch = in.get()) != EOF && ch != delim)

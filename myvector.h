@@ -100,6 +100,9 @@ public:
             return true;
         return false;
     }
+    bool operator != (const vector_type &x) const {
+        return !(*this == x);
+    }
     bool operator < (const vector_type &x) const {
         const_iterator iter1, iter2;
         for (iter1 = cbegin(), iter2 = x.cbegin(); iter1 != cend() && iter2 != x.cend() && *iter1 == *iter2; ++iter1, ++iter2);

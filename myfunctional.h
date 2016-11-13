@@ -36,6 +36,14 @@ template<> struct myhash<Type> {             \
     }                                        \
 };
 
+template<typename Key>
+struct myhash<Key *> {
+    std::size_t operator () (Key *x) const {
+        return reinterpret_cast<std::size_t>(x);
+    }
+};
+
+
 TRIVIAL_HASH(char)
 TRIVIAL_HASH(signed char)
 TRIVIAL_HASH(unsigned char)

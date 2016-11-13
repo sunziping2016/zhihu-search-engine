@@ -11,7 +11,7 @@ template<typename Key, typename T, typename Hash>
 class myhashmap_hash {
 public:
     myhashmap_hash(const Hash &hash) : hash(hash) {}
-    size_t operator () (const mypair<const Key, T> &x) {
+    size_t operator () (const mypair<const Key, T> &x) const {
         return hash(x.first);
     }
 private:
@@ -22,7 +22,7 @@ template<typename Key, typename T, typename KeyEqual>
 class myhashmap_equal {
 public:
     myhashmap_equal(const KeyEqual &equal) : equal(equal) {}
-    bool operator () (const mypair<const Key, T> &lhs, const mypair<const Key, T> &rhs) {
+    bool operator () (const mypair<const Key, T> &lhs, const mypair<const Key, T> &rhs) const {
         return equal(lhs.first, rhs.first);
     }
 private:
@@ -50,7 +50,7 @@ public:
         return hashset_type::find(mypair<const Key, T>(key, T()));
     }
     const_iterator find(const Key& key) const {
-        return find(mypair<const Key, T>(key, T()));
+        return hashset_type::find(mypair<const Key, T>(key, T()));
     }
 
     T &operator[](const Key& key) {
