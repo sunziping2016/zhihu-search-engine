@@ -121,7 +121,7 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
             ++end_index;
         if (end_index == html.size())
             throw runtime_error("Unexpected ending in a comment");
-        node.m_text = html.substr(index, end_index - index);
+        node.m_text = unescape_html(html, end_index, index);
         open_num = 0;
         return skip_whitespace(html, end_index + 3);
     } else if (starts_with(html, index, "</")) { // close tag
@@ -390,11 +390,10 @@ html_node *html_node::find(const html_selector &selector) {
 html_result<const html_node *> html_node::find_all(const html_selector &selector) const {
     html_result<const html_node *> result;
     if (selector.match(this))
-        result.insert(this);
+        result.push_back(this);
     for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter) {
         const html_node * pnode = *iter;
-        html_result<const html_node *> temp_result = pnode->find_all(selector);
-        result.insert(temp_result.cbegin(), temp_result.cend());
+        result += pnode->find_all(selector);
     }
     return result;
 }
@@ -402,11 +401,9 @@ html_result<const html_node *> html_node::find_all(const html_selector &selector
 html_result<html_node *> html_node::find_all(const html_selector &selector) {
     html_result<html_node *> result;
     if (selector.match(this))
-        result.insert(this);
-    for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter) {
-        html_result<html_node *> temp_result = (*iter)->find_all(selector);
-        result.insert(temp_result.cbegin(), temp_result.cend());
-    }
+        result.push_back(this);
+    for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter)
+        result += (*iter)->find_all(selector);
     return result;
 }
 

@@ -45,10 +45,10 @@ private:
 };
 
 template<typename PNode>
-class html_result: public myhashset<PNode> {
+class html_result: public myvector<PNode> {
 public:
     html_result() {}
-    html_result(const html_result &other) : myhashset<PNode>(other) {}
+    html_result(const html_result &other) : myvector<PNode>(other) {}
     html_result find_all(const html_selector &selector) const;
     myvector<myu32string> text() const;
     myvector<myu32string> html() const;
@@ -100,17 +100,15 @@ private:
 template<typename PNode>
 html_result<PNode> html_result<PNode>::find_all(const html_selector &selector) const {
     html_result result;
-    for (typename myhashset<PNode>::const_iterator iter = this->cbegin(); iter != this->cend(); ++iter) {
-        myhashset<PNode> temp_result = (*iter)->find_all(selector);
-        result.insert(temp_result.cbegin(), temp_result.cend());
-    }
+    for (typename myvector<PNode>::const_iterator iter = this->cbegin(); iter != this->cend(); ++iter)
+        result += (*iter)->find_all(selector);
     return result;
 }
 
 template<typename PNode>
 myvector<myu32string> html_result<PNode>::text() const {
     myvector<myu32string> result;
-    for (typename myhashset<PNode>::const_iterator iter = this->cbegin(); iter != this->cend(); ++iter)
+    for (typename myvector<PNode>::const_iterator iter = this->cbegin(); iter != this->cend(); ++iter)
         result.push_back((*iter)->text());
     return result;
 }
@@ -118,7 +116,7 @@ myvector<myu32string> html_result<PNode>::text() const {
 template<typename PNode>
 myvector<myu32string> html_result<PNode>::html() const {
     myvector<myu32string> result;
-    for (typename myhashset<PNode>::const_iterator iter = this->cbegin(); iter != this->cend(); ++iter)
+    for (typename myvector<PNode>::const_iterator iter = this->cbegin(); iter != this->cend(); ++iter)
         result.push_back((*iter)->html());
     return result;
 }

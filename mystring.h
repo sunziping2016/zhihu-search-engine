@@ -37,6 +37,34 @@ public:
     string_type substr(size_t pos, size_t count) const {
         return string_type(this->begin() + pos, this->begin() + pos + count);
     }
+
+    std::size_t find(const string_type &str, std::size_t pos = 0) const {
+        if (str.empty())
+            return 0;
+        int *pre_array = new int[str.size()];
+        pre_array[0] = -1;
+        for (std::size_t i = 1; i < str.size(); ++i) {
+            int k = pre_array[i - 1];
+            while (k >= 0 && pre_array[k] != pre_array[i - 1])
+                k = pre_array[k];
+            pre_array[i] = k + 1;
+        }
+        int k = 0;
+        while (pos < this->size()) {
+            if (k == -1) {
+                ++pos;
+                k = 0;
+            } else if ((*this)[pos] == str[k]) {
+                ++pos;
+                ++k;
+                if (k == str.size()) {
+                    return pos - str.size();
+                }
+            } else
+                k = pre_array[k];
+        }
+        return this->size();
+    }
 };
 
 template<typename CharT>
@@ -91,7 +119,6 @@ std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in
     int ch;
     str.clear();
     if (ch != EOF) {
-        str.push_back(static_cast<CharT>(ch));
         while ((ch = in.get()) != EOF && ch != delim)
             str.push_back(ch);
     }
@@ -115,6 +142,7 @@ std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in
 template<typename CharT, typename Traits, typename Allocator>
 std::basic_istream<CharT, Traits> &getall(std::basic_istream<CharT, Traits> &in, mybasic_string<CharT, Traits, Allocator> &str) {
     int ch;
+    str.clear();
     while ((ch = in.get()) != EOF)
         str.push_back(ch);
     return in;
