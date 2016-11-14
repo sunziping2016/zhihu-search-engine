@@ -4,9 +4,8 @@
 
 #include "mycodecvt.h"
 
-myu32string utf8_to_utf32(const mystring &str) {
+myu32string utf8_to_utf32(const mystring &str, std::size_t index) {
     myu32string result;
-    std::size_t index = 0;
 
     while (index != str.size()) {
         std::size_t remunits;
@@ -33,9 +32,8 @@ myu32string utf8_to_utf32(const mystring &str) {
     return result;
 }
 
-mystring utf32_to_utf8(const myu32string &str) {
+mystring utf32_to_utf8(const myu32string &str, std::size_t index) {
     mystring result;
-    std::size_t index = 0;
     while (index != str.size()) {
         char32_t cp = str[index++];
         if (cp < 0x7f)
@@ -64,6 +62,8 @@ myu32string input_utf8_to_utf32(std::istream &in)
 {
     mystring temp;
     getall(in, temp);
+    if (temp.size() >= 3 && temp[0] == '\xef' && temp[1] == '\xbb' && temp[2] == '\xbf') // BOM character
+        return utf8_to_utf32(temp, 3);
     return utf8_to_utf32(temp);
 }
 void output_utf32_to_utf8(std::ostream &out, const myu32string &text)

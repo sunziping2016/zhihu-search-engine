@@ -125,9 +125,11 @@ std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in
 
 template<typename CharT, typename Traits, typename Allocator> struct myhash<mybasic_string<CharT, Traits, Allocator> > {
     std::size_t operator () (const mybasic_string<CharT, Traits, Allocator> &str) const {
-        std::size_t value = 0;
-        for (typename mybasic_string<CharT, Traits, Allocator>::const_iterator iter = str.cbegin(); iter < str.cend(); ++iter)
-            value = 37 * value + *iter;
+        std::size_t value = 0, step = str.size() / 5;
+        if (step == 0)
+            step = 1;
+        for (std::size_t i = 0; i < str.size(); i += step)
+            value = 37 * value + str[i];
         return value;
     }
 };

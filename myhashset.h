@@ -251,6 +251,25 @@ public:
         }
         return end();
     }
+    void reserve(size_t new_capacity) {
+        value_type *old_items = m_items;
+        std::uint8_t *old_states = m_states;
+        std::size_t old_capacity = m_capacity;
+        m_size = 0;
+        m_capacity = new_capacity;
+        m_begin_index = m_capacity;
+        m_items = alloc.allocate(m_capacity);
+        m_states = new std::uint8_t[m_capacity];
+        std::memset(m_states, 0, sizeof(std::uint8_t) * m_capacity);
+        for (std::size_t i = 0; i < old_capacity; i++) {
+            if (old_states[i] == 1) {
+                add_member(old_items[i]);
+                alloc.destroy(old_items + i);
+            }
+        }
+        alloc.deallocate(old_items, old_capacity);
+        delete []old_states;
+    }
 
     const_iterator find(const value_type &x) const {
         if (m_capacity == 0)
@@ -269,7 +288,7 @@ public:
     }
 protected:
     void maybe_rehash() {
-        if (m_size > m_capacity * 0.5)
+        if (m_size > m_capacity * 0.3)
             force_rehash();
     }
 

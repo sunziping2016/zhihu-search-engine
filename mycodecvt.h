@@ -8,8 +8,8 @@
 #include <iostream>
 #include "mystring.h"
 
-myu32string utf8_to_utf32(const mystring &str);
-mystring utf32_to_utf8(const myu32string &str);
+myu32string utf8_to_utf32(const mystring &str, std::size_t index = 0);
+mystring utf32_to_utf8(const myu32string &str, std::size_t index = 0);
 
 myu32string input_utf8_to_utf32(std::istream &in);
 void output_utf32_to_utf8(std::ostream &out, const myu32string &text);

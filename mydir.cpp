@@ -22,39 +22,36 @@ mylist<mystring> mydir(const mystring &directory) {
         }
         closedir(dp);
     }
+    dirs.sort();
     return dirs;
 }
 #elif defined(_WIN32)
 #include <windows.h>
-// To be tested on windows
 mylist<mystring> mydir(const mystring &directory) {
     mylist<mystring> dirs;
     mystring dir(directory);
 
-    WIN32_FIND_DATA findfiledata;
+    WIN32_FIND_DATAA findfiledata;
     HANDLE hFind = INVALID_HANDLE_VALUE;
 
-    char fullpath[MAX_PATH];
-    GetFullPathNameA(path.c_str(), MAX_PATH, fullpath, 0);
-    std::string fp(fullpath);
-
-    if (dir.back() == '\0')
-        dir.pop_back();
     if (dir.back() == '\\' || dir.back() == '/')
         dir.pop_back();
     for (std::size_t i = 0; i < dir.size(); ++i)
         if (dir[i] == '/')
             dir[i] = '\\';
-    dir += "\\*"
-    dir.push_back('\0');
+	dir += "\\*";
 
-    hFind = FindFirstFileA((LPCSTR) dir.begin(), &findfiledata);
+    hFind = FindFirstFileA((LPCSTR) dir.c_str(), &findfiledata);
     if (hFind != INVALID_HANDLE_VALUE) {
         do {
-            if (findfiledata.dwFileAttributes & FILE_ATTRIBUTE_NORMAL)
+            if (!(findfiledata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 dirs.push_back(findfiledata.cFileName);
         }
         while (FindNextFileA(hFind, &findfiledata));
     }
+    dirs.sort();
+    return dirs;
 }
+#else
+#error "Unknown system."
 #endif

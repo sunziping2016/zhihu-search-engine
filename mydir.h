@@ -10,4 +10,12 @@
 
 mylist<mystring> mydir(const mystring &directory);
 
+#if defined (__unix__) || defined (__APPLE__)
+#define PATH_SEPARATOR "/"
+#elif defined(_WIN32)
+#define PATH_SEPARATOR "\\"
+#else
+#error "Unknown system."
+#endif
+
 #endif //HTML_PARSER_MYDIR_H

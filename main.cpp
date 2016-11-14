@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cassert>
 
 #include "mycodecvt.h"
 #include "mydir.h"
@@ -11,9 +12,11 @@ int main()
 {
     myhashset<myu32string> dictionary;
     size_t max_key_length = 0;
+    cout << "Loading dictionary" << endl;
     // Load dictionary
-    ifstream dict_file("dictionary.dic");
+    dictionary.reserve(1000000);
     mystring line;
+    ifstream dict_file("dictionary.dic");
     while (getline(dict_file, line)) {
         if (line.empty())
             continue;
@@ -22,11 +25,11 @@ int main()
             max_key_length = data.size();
         dictionary.insert(data);
     }
-
     for (auto filename:  mydir("input")) {
-        ifstream html_file(("input/" + filename).c_str());
-        ofstream info_file(("output/" + filename.substr(0, filename.find(".")) + ".info").c_str());
-        ofstream word_file(("output/" + filename.substr(0, filename.find(".")) + ".txt").c_str());
+        cout << "Parsing \"" << filename << "\"" << endl;
+        ifstream html_file(("input" PATH_SEPARATOR + filename).c_str());
+        ofstream info_file(("output" PATH_SEPARATOR + filename.substr(0, filename.find(".")) + ".info").c_str());
+        ofstream word_file(("output" PATH_SEPARATOR + filename.substr(0, filename.find(".")) + ".txt").c_str());
         // Build dom tree
         html_dom dom(input_utf8_to_utf32(html_file));
         // Parse information
@@ -36,9 +39,13 @@ int main()
         author = dom.find(html_selector("span").class_("author"))->text();
         if (!author.empty() && author.back() == L'\uff0c')
             author.pop_back();
-        for (auto i : dom.find(html_selector("div").class_("content"))->find_all("p").text()) {
-            content += i;
-            content.push_back('\n');
+        html_result contents = dom.find_all(html_selector("div").class_("content"));
+        contents.pop_back();
+        for (auto i: contents) {
+            for (auto j: *i) {
+                content += j->text();
+                content.push_back('\n');
+            }
         }
         // Output information
         info_file << utf32_to_utf8(headline) << '\n'
@@ -53,7 +60,8 @@ int main()
                 length = max_key_length;
             while (length > 1 && dictionary.find(content.substr(start, length)) == dictionary.end())
                 --length;
-            word_file << utf32_to_utf8(content.substr(start, length)) << '\n';
+            if (length != 1)
+                word_file << utf32_to_utf8(content.substr(start, length)) << '\n';
             start += length;
         }
     }

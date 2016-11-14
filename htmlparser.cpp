@@ -113,9 +113,9 @@ static myu32string unescape_html(const myu32string &html, size_t begin, size_t e
 
 size_t parse_node(const myu32string &html, size_t index, html_node &parent, html_node &node, int &open_num) {
     size_t end_index;
-    bool no_escape = no_escape_element(parent.name);
+    bool no_escape = no_escape_element(parent.m_name);
     if (starts_with(html, index, "<!--") && !no_escape) { // comment
-        node.type = html_node::COMMENT;
+        node.m_type = html_node::COMMENT;
         end_index = index += 4;
         while (end_index != html.size() && !starts_with(html, end_index, "-->"))
             ++end_index;
@@ -125,7 +125,7 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
         open_num = 0;
         return skip_whitespace(html, end_index + 3);
     } else if (starts_with(html, index, "</")) { // close tag
-        node.type = html_node::TAG;
+        node.m_type = html_node::TAG;
         end_index = index = skip_whitespace(html, index + 2);
         while (end_index != html.size() && html[end_index] != '>' && !iswspace(html[end_index]))
             ++end_index;
@@ -133,7 +133,7 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
             throw runtime_error("Unnamed close tag");
         if (end_index == html.size())
             throw runtime_error("Unexpected ending in a close tag");
-        node.name = html.substr(index, end_index - index);
+        node.m_name = html.substr(index, end_index - index);
         index = skip_whitespace(html, end_index);
         if (index == html.size())
             throw runtime_error("Unexpected ending in a close tag");
@@ -142,9 +142,9 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
         open_num = -1;
         return skip_whitespace(html, index + 1);
     } else if (no_escape) { // text
-        node.type = html_node::TEXT;
+        node.m_type = html_node::TEXT;
         end_index = index;
-        myu32string close_tag = "</" + parent.name + ">";
+        myu32string close_tag = "</" + parent.m_name + ">";
         while (end_index != html.size() && !starts_with(html, end_index, close_tag))
             ++end_index;
         size_t temp_index = end_index;
@@ -155,13 +155,13 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
         return end_index;
 
     } else if (html[index] == '<') { // open tag
-        node.type = html_node::TAG;
+        node.m_type = html_node::TAG;
         end_index = index = skip_whitespace(html, index + 1);
         while (end_index != html.size() && html[end_index] != '>' && !iswspace(html[end_index]) && !starts_with(html, end_index, "/>"))
             ++end_index;
         if (end_index == html.size())
             throw runtime_error("Unexpected ending in an open tag");
-        node.name = html.substr(index, end_index - index);
+        node.m_name = html.substr(index, end_index - index);
         index = skip_whitespace(html, end_index);
         myu32string name, value;
         while (index != html.size() && html[index] != '>' && !starts_with(html, index, "/>")) {
@@ -204,19 +204,19 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
                     q = p;
                     while (q != value.size() && !iswspace(value[q]))
                         ++q;
-                    node.classes.insert(value.substr(p, q - p));
+                    node.m_classes.insert(value.substr(p, q - p));
                     p = q;
                     while (p != value.size() && iswspace(value[p]))
                         ++p;
                 }
             }
-            node.attrs.insert(mymake_pair(name, value));
+            node.m_attrs.insert(mymake_pair(name, value));
             index = skip_whitespace(html, index);
         }
         if (index == html.size())
             throw runtime_error("Unexpected ending in an open tag");
         if (html[index] == '>') {
-            if (is_void_element(node.name))
+            if (is_void_element(node.m_name))
                 open_num = 0;
             else
                 open_num = 1;
@@ -226,7 +226,7 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
             return skip_whitespace(html, index + 2);
         }
     } else {
-        node.type = html_node::TEXT;
+        node.m_type = html_node::TEXT;
         end_index = index;
         while (end_index != html.size() && html[end_index] != '<')
             ++end_index;
@@ -255,8 +255,8 @@ void html_node::parse(const myu32string &html) {
             int open_num = 0;
             index = parse_node(html, index, *nodes_stack.top(), *node, open_num);
             if (open_num == 1 || open_num == 0) {
-                node->parent = nodes_stack.top();
-                node->parent->children.push_back(node);
+                node->m_parent = nodes_stack.top();
+                node->m_parent->m_children.push_back(node);
                 if (open_num == 1)
                     nodes_stack.push(node);
                 nodes.push_back(node);
@@ -265,7 +265,7 @@ void html_node::parse(const myu32string &html) {
                 // open_num == -1
                 if (nodes_stack.size() < 2)
                     throw runtime_error("Too many close tags");
-                if (nodes_stack.top()->name != node->name)
+                if (nodes_stack.top()->m_name != node->m_name)
                     throw runtime_error("Unmatched close tag");
                 nodes_stack.pop();
                 delete node;
@@ -276,11 +276,11 @@ void html_node::parse(const myu32string &html) {
             throw runtime_error("Too many open tags");
     } catch (...) {
         for (myvector<html_node *>::const_iterator iter = nodes.cbegin(); iter != nodes.cend(); ++iter) {
-            (*iter)->children.clear();
+            (*iter)->m_children.clear();
             delete *iter;
         }
         if (node) {
-            node->children.clear();
+            node->m_children.clear();
             delete node;
         }
         throw;
@@ -294,14 +294,14 @@ ostream &operator << (ostream &out, const html_node &node) {
             "TEXT",
             "COMMENT"
     };
-    out << "{ type: " << type_name[node.type];
-    if (node.type == html_node::TAG) {
-        out << ", name: " << utf32_to_utf8(node.name);
-        if (!node.attrs.empty()) {
+    out << "{ m_type: " << type_name[node.m_type];
+    if (node.m_type == html_node::TAG) {
+        out << ", m_name: " << utf32_to_utf8(node.m_name);
+        if (!node.m_attrs.empty()) {
             out << ", attr: { ";
-            for (myhashmap<myu32string, myu32string>::const_iterator iter = node.attrs.cbegin();
-                 iter != node.attrs.cend(); ++iter) {
-                if (iter != node.attrs.cbegin())
+            for (myhashmap<myu32string, myu32string>::const_iterator iter = node.m_attrs.cbegin();
+                 iter != node.m_attrs.cend(); ++iter) {
+                if (iter != node.m_attrs.cbegin())
                     out << ", ";
                 out << utf32_to_utf8(iter->first) << " : " << utf32_to_utf8(iter->second);
             }
@@ -309,31 +309,31 @@ ostream &operator << (ostream &out, const html_node &node) {
         }
     }
 
-    if ((node.type == html_node::DOCUMENT || node.type == html_node::TAG) && !node.children.empty()) {
+    if ((node.m_type == html_node::DOCUMENT || node.m_type == html_node::TAG) && !node.m_children.empty()) {
         out << ", child: [ ";
-        for (size_t i = 0; i < node.children.size(); ++i) {
+        for (size_t i = 0; i < node.m_children.size(); ++i) {
             if (i != 0)
                 out << ", ";
-            out << *node.children[i];
+            out << *node.m_children[i];
         }
         out << " ]";
     }
-    if (node.type == html_node::COMMENT || node.type == html_node::TEXT)
+    if (node.m_type == html_node::COMMENT || node.m_type == html_node::TEXT)
         out << ", m_text: " << utf32_to_utf8(node.m_text);
     out << " }";
     return out;
 }
 
 myu32string html_node::html() const {
-    if (type == COMMENT)
+    if (m_type == COMMENT)
         return "<!--" + m_text  + "-->";
-    if (type == TEXT)
+    if (m_type == TEXT)
         return m_text;
     myu32string result;
-    if (type == TAG) {
+    if (m_type == TAG) {
         result += "<";
-        result += name;
-        for (myhashmap<myu32string, myu32string>::const_iterator iter = attrs.cbegin(); iter != attrs.cend(); ++iter) {
+        result += m_name;
+        for (myhashmap<myu32string, myu32string>::const_iterator iter = m_attrs.cbegin(); iter != m_attrs.cend(); ++iter) {
             result += " ";
             result += iter->first;
             if (!iter->second.empty()) {
@@ -344,22 +344,22 @@ myu32string html_node::html() const {
         }
         result += ">";
     }
-    for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter)
+    for (myvector<html_node *>::const_iterator iter = m_children.cbegin(); iter < m_children.cend(); ++iter)
         result += (*iter)->html();
-    if (type == TAG && !is_void_element(name)) {
+    if (m_type == TAG && !is_void_element(m_name)) {
         result += "</";
-        result += name;
+        result += m_name;
         result += ">";
     }
     return result;
 }
 
 myu32string html_node::text() const {
-    if (type == TEXT)
+    if (m_type == TEXT)
         return m_text;
     else {
         myu32string result;
-        for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter)
+        for (myvector<html_node *>::const_iterator iter = m_children.cbegin(); iter < m_children.cend(); ++iter)
             result += (*iter)->text();
         return result;
     }
@@ -368,7 +368,7 @@ myu32string html_node::text() const {
 const html_node *html_node::find(const html_selector &selector) const {
     if (selector.match(this))
         return this;
-    for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter) {
+    for (myvector<html_node *>::const_iterator iter = m_children.cbegin(); iter < m_children.cend(); ++iter) {
         const html_node *result = (*iter)->find(selector);
         if (result)
             return result;
@@ -379,7 +379,7 @@ const html_node *html_node::find(const html_selector &selector) const {
 html_node *html_node::find(const html_selector &selector) {
     if (selector.match(this))
         return this;
-    for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter) {
+    for (myvector<html_node *>::const_iterator iter = m_children.cbegin(); iter < m_children.cend(); ++iter) {
         html_node *result = (*iter)->find(selector);
         if (result)
             return result;
@@ -387,37 +387,42 @@ html_node *html_node::find(const html_selector &selector) {
     return NULL;
 }
 
-html_result<const html_node *> html_node::find_all(const html_selector &selector) const {
-    html_result<const html_node *> result;
+basic_html_result<const html_node *> html_node::find_all(const html_selector &selector) const {
+    basic_html_result<const html_node *> result;
     if (selector.match(this))
         result.push_back(this);
-    for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter) {
+    for (myvector<html_node *>::const_iterator iter = m_children.cbegin(); iter < m_children.cend(); ++iter) {
         const html_node * pnode = *iter;
         result += pnode->find_all(selector);
     }
     return result;
 }
 
-html_result<html_node *> html_node::find_all(const html_selector &selector) {
-    html_result<html_node *> result;
+basic_html_result<html_node *> html_node::find_all(const html_selector &selector) {
+    basic_html_result<html_node *> result;
     if (selector.match(this))
         result.push_back(this);
-    for (myvector<html_node *>::const_iterator iter = children.cbegin(); iter < children.cend(); ++iter)
+    for (myvector<html_node *>::const_iterator iter = m_children.cbegin(); iter < m_children.cend(); ++iter)
         result += (*iter)->find_all(selector);
     return result;
 }
 
+void html_node::clear() {
+    for (myvector<html_node *>::const_iterator iter = m_children.cbegin(); iter < m_children.cend(); ++iter)
+        delete (*iter);
+}
+
 bool html_selector::match(const html_node *node) const {
-    if (node->type != html_node::TAG)
+    if (node->m_type != html_node::TAG)
         return false;
-    if (!m_tag.empty() && m_tag != node->name)
+    if (!m_tag.empty() && m_tag != node->m_name)
         return false;
     for (myvector<myu32string>::const_iterator iter = m_classes.cbegin(); iter < m_classes.cend(); ++iter)
-        if (node->classes.find(*iter) == node->classes.cend())
+        if (node->m_classes.find(*iter) == node->m_classes.cend())
             return false;
     for (myvector<mypair<myu32string, myu32string> >::const_iterator iter = m_attrs.cbegin(); iter != m_attrs.cend(); ++iter) {
-        myhashmap<myu32string, myu32string>::const_iterator result = node->attrs.find(iter->first);
-        if (result == node->attrs.cend())
+        myhashmap<myu32string, myu32string>::const_iterator result = node->m_attrs.find(iter->first);
+        if (result == node->m_attrs.cend())
             return false;
         if (result->second != iter->second)
             return false;

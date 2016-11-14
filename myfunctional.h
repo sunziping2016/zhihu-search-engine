@@ -32,7 +32,7 @@ struct myhash {
 #define TRIVIAL_HASH(Type)                   \
 template<> struct myhash<Type> {             \
     std::size_t operator () (Type x) const { \
-        return x;                            \
+        return static_cast<std::size_t>(x);  \
     }                                        \
 };
 
@@ -45,6 +45,9 @@ struct myhash<Key *> {
 
 
 TRIVIAL_HASH(char)
+TRIVIAL_HASH(wchar_t)
+TRIVIAL_HASH(char16_t)
+TRIVIAL_HASH(char32_t)
 TRIVIAL_HASH(signed char)
 TRIVIAL_HASH(unsigned char)
 TRIVIAL_HASH(short)
