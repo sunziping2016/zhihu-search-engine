@@ -8,8 +8,7 @@
 
 using namespace std;
 
-int main()
-{
+int main() try {
     myhashset<myu32string> dictionary;
     size_t max_key_length = 0;
     cout << "Loading dictionary" << endl;
@@ -17,6 +16,10 @@ int main()
     dictionary.reserve(1000000);
     mystring line;
     ifstream dict_file("dictionary.dic");
+    if (!dict_file) {
+        cerr << "Error opening \"" << "dictionary.dic" << "\"" << endl;
+        return 1;
+    }
     while (getline(dict_file, line)) {
         if (line.empty())
             continue;
@@ -28,8 +31,23 @@ int main()
     for (auto filename:  mydir("input")) {
         cout << "Parsing \"" << filename << "\"" << endl;
         ifstream html_file(("input" PATH_SEPARATOR + filename).c_str());
-        ofstream info_file(("output" PATH_SEPARATOR + filename.substr(0, filename.find(".")) + ".info").c_str());
-        ofstream word_file(("output" PATH_SEPARATOR + filename.substr(0, filename.find(".")) + ".txt").c_str());
+        if (!html_file) {
+            cerr << "Error opening \"" << filename << "\"" << endl;
+            return 1;
+        }
+        mystring basename = filename.substr(0, filename.find(".")),
+                info_filename = "output" PATH_SEPARATOR + basename + ".info",
+                word_filename = "output" PATH_SEPARATOR + basename + ".txt";
+        ofstream info_file(info_filename.c_str());
+        ofstream word_file(word_filename.c_str());
+        if (!info_file) {
+            cerr << "Error opening \"" << info_filename << "\"" << endl;
+            return 1;
+        }
+        if (!word_file) {
+            cerr << "Error opening \"" << word_filename << "\"" << endl;
+            return 1;
+        }
         // Build dom tree
         html_dom dom(input_utf8_to_utf32(html_file));
         // Parse information
@@ -37,7 +55,7 @@ int main()
         headline = dom.find("h1")->text();
         question = dom.find("h2")->text();
         author = dom.find(html_selector("span").class_("author"))->text();
-        if (!author.empty() && author.back() == L'\uff0c')
+        if (!author.empty() && author.back() == L'\uff0c') // Extra comma
             author.pop_back();
         html_result contents = dom.find_all(html_selector("div").class_("content"));
         contents.pop_back();
@@ -66,4 +84,7 @@ int main()
         }
     }
     return 0;
+} catch (runtime_error error) {
+    cerr << error.what() << endl;
+    return 1;
 }
