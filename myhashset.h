@@ -8,6 +8,7 @@
 #include <memory>      // for std::allocator
 #include <cstdint>     // for std::uint8_t
 #include <cstring>     // for std::memset
+#include <initializer_list> // for std::initializer_list
 
 #include "myfunctional.h"
 #include "mypair.h"
@@ -174,6 +175,10 @@ public:
     myhashset(InputIterator first, InputIterator last, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
             :m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(hash), equal(equal), alloc(alloc) {
         insert(first, last);
+    }
+    myhashset(std::initializer_list<value_type> list, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
+            :m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(hash), equal(equal), alloc(alloc) {
+        insert(list.begin(), list.end());
     }
     virtual ~myhashset() {
         clear();

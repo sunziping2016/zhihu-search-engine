@@ -44,6 +44,8 @@ public:
     template <typename InputIterator>
     myhashmap(InputIterator first, InputIterator last, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
             : hashset_type(first, last, myhashmap_hash<Key, T, Hash>(hash), myhashmap_equal<Key, T, KeyEqual>(equal), alloc) {}
+    myhashmap(std::initializer_list<typename hashset_type::value_type> list, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
+            : hashset_type(list.begin(), list.end(), myhashmap_hash<Key, T, Hash>(hash), myhashmap_equal<Key, T, KeyEqual>(equal), alloc) {}
 
 
     iterator find(const Key &key) {

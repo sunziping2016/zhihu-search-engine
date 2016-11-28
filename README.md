@@ -1,4 +1,6 @@
 # About
+
+## First Part - Parse HTML and Perform Word Splitting
 Yeah, this project may best explain what reinventing the wheel means. :) As it is my homework for
 *Data Structure and Algorithm*, I'm not allowed to use any STL or `std::string`-liked standard components.
 However, I've really missing them a lot, so I decide to reinvent them.
@@ -20,3 +22,6 @@ couldn't use C++ 11 or any version later.
 
 Well, finally I'll use these to implement a html parser providing some interface similar to
 `BeautifulSoap` and a quite simple word separation algorithm.
+
+## Second Part - Create Inverted Index for Web Search
+

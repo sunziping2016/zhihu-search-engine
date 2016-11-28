@@ -7,8 +7,8 @@
 #if defined (__unix__) || defined (__APPLE__)
 #include <sys/types.h>
 #include <dirent.h>
-mylist<mystring> mydir(const mystring &directory) {
-    mylist<mystring> dirs;
+myvector<mystring> mydir(const mystring &directory) {
+    myvector<mystring> dirs;
     mystring dir(directory);
     if (dir.back() != '\0')
         dir.push_back('\0');
@@ -22,13 +22,12 @@ mylist<mystring> mydir(const mystring &directory) {
         }
         closedir(dp);
     }
-    dirs.sort();
     return dirs;
 }
 #elif defined(_WIN32)
 #include <windows.h>
-mylist<mystring> mydir(const mystring &directory) {
-    mylist<mystring> dirs;
+myvector<mystring> mydir(const mystring &directory) {
+    myvector<mystring> dirs;
     mystring dir(directory);
 
     WIN32_FIND_DATAA findfiledata;
@@ -49,7 +48,6 @@ mylist<mystring> mydir(const mystring &directory) {
         }
         while (FindNextFileA(hFind, &findfiledata));
     }
-    dirs.sort();
     return dirs;
 }
 #else

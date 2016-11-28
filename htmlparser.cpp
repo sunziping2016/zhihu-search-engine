@@ -31,16 +31,8 @@ static inline bool istarts_with(const myu32string &html, size_t index, const myu
 }
 
 
-static bool is_void_element(const myu32string &name) {
-    static myhashset<myu32string> elements;
-    static bool init = false;
-    if (!init) {
-        elements.insert("!doctype");
-        for (size_t i = 0; i < void_elements_n; ++i)
-            elements.insert(void_elements[i]);
-        init = true;
-    }
-    return elements.find(name) != elements.end();
+static inline bool is_void_element(const myu32string &name) {
+    return void_elements.find(name) != void_elements.end();
 }
 
 static inline bool no_escape_element(const myu32string &name) {
@@ -48,20 +40,6 @@ static inline bool no_escape_element(const myu32string &name) {
 }
 
 static myu32string unescape_html(const myu32string &html, size_t begin, size_t end) {
-    static myhashmap<myu32string, char32_t> elements;
-    static bool init = false;
-    static size_t max_length = 0;
-    if (!init) {
-        for (size_t i = 0; i < escape_n; ++i) {
-            elements.insert(mymake_pair(escape_string[i], escape_char[i]));
-            size_t length = 0;
-            while (escape_string[i][length]) ++length;
-            if (length > max_length)
-                max_length = length;
-        }
-        init = true;
-    }
-
     myu32string result;
     while (begin != end) {
         if (starts_with(html, begin, "&#")) {
@@ -94,8 +72,8 @@ static myu32string unescape_html(const myu32string &html, size_t begin, size_t e
                 begin = orig_begin + 1;
                 continue;
             }
-            myhashmap<myu32string, char32_t>::const_iterator x = elements.find(html.substr(begin, new_end - begin));
-            if (x == elements.cend()) {
+            myhashmap<myu32string, char32_t>::const_iterator x = escape_string.find(html.substr(begin, new_end - begin));
+            if (x == escape_string.cend()) {
                 result.push_back(html[orig_begin]);
                 begin = orig_begin + 1;
                 continue;
@@ -120,7 +98,7 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
         while (end_index != html.size() && !starts_with(html, end_index, "-->"))
             ++end_index;
         if (end_index == html.size())
-            throw runtime_error("Unexpected ending in a comment");
+            throw mystring("Unexpected ending in a comment");
         node.m_text = unescape_html(html, end_index, index);
         open_num = 0;
         return skip_whitespace(html, end_index + 3);
@@ -130,15 +108,15 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
         while (end_index != html.size() && html[end_index] != '>' && !iswspace(html[end_index]))
             ++end_index;
         if (index == end_index)
-            throw runtime_error("Unnamed close tag");
+            throw mystring("Unnamed close tag");
         if (end_index == html.size())
-            throw runtime_error("Unexpected ending in a close tag");
+            throw mystring("Unexpected ending in a close tag");
         node.m_name = html.substr(index, end_index - index);
         index = skip_whitespace(html, end_index);
         if (index == html.size())
-            throw runtime_error("Unexpected ending in a close tag");
+            throw "Unexpected ending in close tag \"" + utf32_to_utf8(node.m_name) + "\"";
         if (html[index] != '>')
-            throw runtime_error("Unexpected character in a close tag");
+            throw "Unexpected character in close tag \"" + utf32_to_utf8(node.m_name) + "\", expected \'>\'";
         open_num = -1;
         return skip_whitespace(html, index + 1);
     } else if (no_escape) { // text
@@ -160,7 +138,9 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
         while (end_index != html.size() && html[end_index] != '>' && !iswspace(html[end_index]) && !starts_with(html, end_index, "/>"))
             ++end_index;
         if (end_index == html.size())
-            throw runtime_error("Unexpected ending in an open tag");
+            throw mystring("Unexpected ending in an open tag");
+        if (index == end_index)
+            throw mystring("Unnamed open tag");
         node.m_name = html.substr(index, end_index - index);
         index = skip_whitespace(html, end_index);
         myu32string name, value;
@@ -169,20 +149,20 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
             while (end_index != html.size() && html[end_index] != '>' && html[end_index] != '=' && !iswspace(html[end_index]) && !starts_with(html, end_index, "/>"))
                 ++end_index;
             if (end_index == html.size())
-                throw runtime_error("Unexpected ending in an open tag");
+                throw "Unexpected ending in open tag \"" + utf32_to_utf8(node.m_name) + "\"";
             if (index == end_index)
-                throw runtime_error("Unnamed tag's attribute");
+                throw "Unnamed tag's attribute in open tag \"" + utf32_to_utf8(node.m_name) + "\"";
             name = html.substr(index, end_index - index);
             if (html[end_index] == '=') {
                 index = skip_whitespace(html, end_index + 1);
                 if (index == html.size())
-                    throw runtime_error("Unexpected ending in an open tag");
+                    throw "Unexpected ending in atrribute \"" + utf32_to_utf8(name) + "\" in open tag \"" + utf32_to_utf8(node.m_name) + "\"";;
                 if (html[index] == '\"') {
                     end_index = index + 1;
                     while(end_index != html.size() && html[end_index] != '\"')
                         ++end_index;
                     if (end_index == html.size())
-                        throw runtime_error("Unexpected ending in an open tag's attribute value");
+                        throw "Unexpected ending in atrribute \"" + utf32_to_utf8(name) + "\" in open tag \"" + utf32_to_utf8(node.m_name) + "\"";;
                     value = unescape_html(html, index + 1, end_index);
                     index = end_index + 1;
                 } else {
@@ -190,7 +170,7 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
                     while(end_index != html.size() && html[end_index] != '>' && !iswspace(html[end_index]) && !starts_with(html, end_index, "/>"))
                         ++end_index;
                     if (end_index == html.size())
-                        throw runtime_error("Unexpected ending in an open tag");
+                        throw "Unexpected ending in open tag \"" + utf32_to_utf8(node.m_name) + "\"";
                     value = unescape_html(html, index, end_index);
                     index = end_index;
                 }
@@ -214,7 +194,7 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
             index = skip_whitespace(html, index);
         }
         if (index == html.size())
-            throw runtime_error("Unexpected ending in an open tag");
+            throw "Unexpected ending in open tag \"" + utf32_to_utf8(node.m_name) + "\"";
         if (html[index] == '>') {
             if (is_void_element(node.m_name))
                 open_num = 0;
@@ -239,6 +219,23 @@ size_t parse_node(const myu32string &html, size_t index, html_node &parent, html
     }
 }
 
+static mystring index_to_mystring(size_t index) {
+    mystack<char> stack;
+    while (index) {
+        stack.push((char) (index % 10 + '0'));
+        index /= 10;
+    }
+    if (stack.empty())
+        return "0";
+    else {
+        mystring str;
+        while (!stack.empty()) {
+            str.push_back(stack.top());
+            stack.pop();
+        }
+        return str;
+    }
+}
 
 void html_node::parse(const myu32string &html) {
     size_t index = 0;
@@ -248,32 +245,42 @@ void html_node::parse(const myu32string &html) {
     html_node *node = NULL;
 
     try {
-        nodes_stack.push(this);
-        index = skip_whitespace(html, index);
-        while (index != html.size()) {
-            node = new html_node;
-            int open_num = 0;
-            index = parse_node(html, index, *nodes_stack.top(), *node, open_num);
-            if (open_num == 1 || open_num == 0) {
-                node->m_parent = nodes_stack.top();
-                node->m_parent->m_children.push_back(node);
-                if (open_num == 1)
-                    nodes_stack.push(node);
-                nodes.push_back(node);
-                node = NULL;
-            } else {
-                // open_num == -1
-                if (nodes_stack.size() < 2)
-                    throw runtime_error("Too many close tags");
-                if (nodes_stack.top()->m_name != node->m_name)
-                    throw runtime_error("Unmatched close tag");
-                nodes_stack.pop();
-                delete node;
-                node = NULL;
+        try {
+            nodes_stack.push(this);
+            index = skip_whitespace(html, index);
+            while (index != html.size()) {
+                node = new html_node;
+                int open_num = 0;
+                index = parse_node(html, index, *nodes_stack.top(), *node, open_num);
+                if (open_num == 1 || open_num == 0) {
+                    node->m_parent = nodes_stack.top();
+                    node->m_parent->m_children.push_back(node);
+                    if (open_num == 1)
+                        nodes_stack.push(node);
+                    nodes.push_back(node);
+                    node = NULL;
+                } else {
+                    // open_num == -1
+                    if (nodes_stack.size() < 2)
+                        throw "Redundant close tag \"" + utf32_to_utf8(node->m_name) + "\"";
+                    if (nodes_stack.top()->m_name != node->m_name)
+                        throw "Unmatched close tag \"" + utf32_to_utf8(nodes_stack.top()->m_name) + "\" vs \"" + utf32_to_utf8(node->m_name) + "\"";
+                    nodes_stack.pop();
+                    delete node;
+                    node = NULL;
+                }
             }
+            if (nodes_stack.size() != 1)
+                throw "Unclosed tag \"" + utf32_to_utf8(nodes_stack.top()->name()) + "\"";
+        } catch (mystring error) {
+            size_t line = 0, last_index = 0;
+            for (size_t i = 0; i < index && i < html.size(); ++i)
+                if (html[i] == '\n') {
+                    last_index = i;
+                    ++line;
+                }
+            throw "(line: " + index_to_mystring(line + 1) + ", col: " + index_to_mystring(index < html.size() ? index - last_index + 1 : index - last_index) + ") " + error;
         }
-        if (nodes_stack.size() != 1)
-            throw runtime_error("Too many open tags");
     } catch (...) {
         for (myvector<html_node *>::const_iterator iter = nodes.cbegin(); iter != nodes.cend(); ++iter) {
             (*iter)->m_children.clear();
@@ -283,6 +290,7 @@ void html_node::parse(const myu32string &html) {
             node->m_children.clear();
             delete node;
         }
+        m_children.clear();
         throw;
     }
 }

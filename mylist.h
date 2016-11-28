@@ -161,19 +161,19 @@ public:
     typedef typename Allocator::const_reference          const_reference;
 
     explicit mylist(const Allocator &alloc = Allocator())
-            : alloc(alloc) {
+            : alloc(alloc), m_size(0) {
         root = new node_type(alloc);
         root->next = root->prev = root;
     }
     template <typename InputIterator>
     mylist(InputIterator first, InputIterator last, const Allocator &alloc = Allocator())
-            : alloc(alloc) {
+            : alloc(alloc), m_size(0) {
         root = new node_type(alloc);
         root->next = root->prev = root;
         assign(first, last);
     }
     mylist(const list_type &orig)
-            : alloc(orig.alloc) {
+            : alloc(orig.alloc), m_size(0) {
         root = new node_type(alloc);
         root->next = root->prev = root;
         assign(orig.begin(), orig.end());
@@ -203,6 +203,15 @@ public:
     }
     void push_back(const value_type &value) {
         insert(root, new node_type(value, alloc));
+    }
+    void push_front(const value_type &value) {
+        insert(root->next, new node_type(value, alloc));
+    }
+    void pop_back() {
+        remove(root);
+    }
+    void pop_front() {
+        remove(root->next);
     }
     iterator insert(iterator iter, const value_type &value) {
         node_type *node = new node_type(value, alloc);
@@ -239,6 +248,12 @@ public:
     const_reference back() const {
         return *root->prev->data;
     }
+    std::size_t size() const {
+        return m_size;
+    }
+    bool empty() const {
+        return m_size == 0;
+    }
     template<typename Func = myless<value_type> >
     void sort(Func func = Func()) {
         node_type *temp;
@@ -261,15 +276,18 @@ protected:
         node->prev->next = node->next;
         node->next->prev = node->prev;
         delete node;
+        --m_size;
     }
     void insert(node_type *node, node_type *newnode) {
         node->prev->next = newnode;
         newnode->prev = node->prev;
         node->prev = newnode;
         newnode->next = node;
+        ++m_size;
     }
 private:
     node_type *root;
     Allocator alloc;
+    std::size_t m_size;
 };
 #endif

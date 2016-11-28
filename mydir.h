@@ -8,7 +8,7 @@
 #include "mylist.h"
 #include "mystring.h"
 
-mylist<mystring> mydir(const mystring &directory);
+myvector<mystring> mydir(const mystring &directory);
 
 #if defined (__unix__) || defined (__APPLE__)
 #define PATH_SEPARATOR "/"

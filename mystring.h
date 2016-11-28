@@ -5,6 +5,8 @@
 #ifndef HTML_PARSER_MYSTRING_H
 #define HTML_PARSER_MYSTRING_H
 
+#include <iostream>
+
 #include "myvector.h"
 #include "myfunctional.h"
 
@@ -23,6 +25,15 @@ public:
             this->push_back(*s++);
     }
     mybasic_string(const string_type &other) : vector_type(other) {}
+    mybasic_string(string_type &&other) : vector_type(std::move(other)) {}
+    string_type operator = (const string_type &other) {
+        vector_type::operator = (other);
+        return *this;
+    }
+    string_type operator = (string_type &&other) {
+        vector_type::operator = (std::move(other));
+        return *this;
+    }
     string_type &operator += (const string_type &x) {
         this->insert(this->end(), x.begin(), x.end());
         return *this;
@@ -105,14 +116,22 @@ bool operator != (const mybasic_string<CharT1> &lhs, const CharT2 *rhs) {
     return lhs != mybasic_string<CharT1>(rhs);
 }
 
-
-template<typename CharT1, typename CharT2, typename Traits, typename Allocator>
-std::basic_ostream<CharT1> &operator << (std::basic_ostream<CharT1> &out, const mybasic_string<CharT2, Traits, Allocator> str)
+template<typename CharT, typename Traits, typename Allocator>
+std::basic_ostream<CharT> &operator << (std::basic_ostream<CharT> &out, const mybasic_string<CharT, Traits, Allocator> &str)
 {
-    for (typename mybasic_string<CharT2, Traits, Allocator>::const_iterator iter = str.cbegin(); iter < str.cend(); ++iter)
-        out << *iter;
+    mybasic_string<char, Traits, Allocator> copy(str);
+    out << copy.c_str();
     return out;
 };
+
+template<typename CharT, typename Traits, typename Allocator>
+std::basic_ostream<CharT> &operator << (std::basic_ostream<CharT> &out, mybasic_string<CharT, Traits, Allocator> &&str)
+{
+    mybasic_string<char, Traits, Allocator> copy(std::move(str));
+    out << copy.c_str();
+    return out;
+};
+
 
 template<typename CharT, typename Traits, typename Allocator>
 std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in, mybasic_string<CharT, Traits, Allocator> &str, CharT delim) {
@@ -152,5 +171,6 @@ typedef mybasic_string<char>     mystring;
 typedef mybasic_string<wchar_t>  mywstring;
 typedef mybasic_string<char16_t> myu16string;
 typedef mybasic_string<char32_t> myu32string;
+
 
 #endif //HTML_PARSER_MYSTRING_H
