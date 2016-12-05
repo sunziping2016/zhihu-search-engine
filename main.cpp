@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <iomanip>
 
 #include "mycodecvt.h"
 #include "mydir.h"
@@ -8,6 +9,18 @@
 #include "threadpool.h"
 
 using namespace std;
+
+mystring percent_to_string(double x) {
+    mystring number;
+    int num = static_cast<int>(x * 100 + 0.5);
+    char hundreds = static_cast<char>(num / 100) + '0',
+            tens = static_cast<char>(num / 10 % 10) + '0',
+            ones = static_cast<char>(num % 10) + '0';
+    number.push_back(hundreds == '0' ? ' ' :  hundreds);
+    number.push_back(hundreds == '0' && tens == '0' ? ' ' : tens);
+    number.push_back(ones);
+    return number;
+}
 
 struct zhihu_content {
     myu32string headline, question, author, content;
@@ -40,9 +53,11 @@ int main() {
     });
 
     myvector<mystring> filenames(mydir("input"));
+    atomic_ulong parsed_cnt(0), split_cnt(0), total_cnt(filenames.size());
+
     myvector<std::future<zhihu_content *> > infos;
     for (auto &filename: filenames) {
-         infos.push_back(threads.enqueue([&filename]() -> zhihu_content * {
+         infos.push_back(threads.enqueue([&filename, &parsed_cnt, &total_cnt]() -> zhihu_content * {
              mystring input_filename = "input" PATH_SEPARATOR + filename,
                      basename = filename.substr(0, filename.find(".")),
                      info_filename = "output" PATH_SEPARATOR + basename + ".info";
@@ -97,7 +112,7 @@ int main() {
         zhihu_content *result = infos[i].get();
         if (!result)
             continue;
-        results.push_back(threads.enqueue([result, &filenames, i, &dictionary, max_key_length] {
+        results.push_back(threads.enqueue([result, &filenames, i, &dictionary, max_key_length, &split_cnt, &total_cnt] {
             mystring basename = filenames[i].substr(0, filenames[i].find(".")),
                     word_filename = "output" PATH_SEPARATOR + basename + ".txt";
             ofstream word_file(word_filename.c_str());
@@ -113,8 +128,7 @@ int main() {
                     length = max_key_length;
                 while (length > 1 && dictionary.find(result->content.substr(start, length)) == dictionary.end())
                     --length;
-                if (length != 1)
-                    word_file << utf32_to_utf8(result->content.substr(start, length)) << '\n';
+                word_file << utf32_to_utf8(result->content.substr(start, length)) << '\n';
                 start += length;
             }
             delete result;

@@ -1,1 +1,0 @@
-/usr/bin/c++    -std=c++17 -Wall -Wextra -g   CMakeFiles/html_parser.dir/main.cpp.o CMakeFiles/html_parser.dir/mydir.cpp.o CMakeFiles/html_parser.dir/mycodecvt.cpp.o CMakeFiles/html_parser.dir/htmlparser.cpp.o CMakeFiles/html_parser.dir/htmldata.cpp.o  -o ../html_parser -lpthread 

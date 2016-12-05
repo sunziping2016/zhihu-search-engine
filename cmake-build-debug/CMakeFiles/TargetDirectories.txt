@@ -1,3 +1,0 @@
-/home/sun/Projects/DSA/html-parser/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/sun/Projects/DSA/html-parser/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/sun/Projects/DSA/html-parser/cmake-build-debug/CMakeFiles/html_parser.dir
