@@ -138,7 +138,7 @@ std::basic_istream<CharT, Traits> &getline(std::basic_istream<CharT, Traits> &in
     int ch;
     str.clear();
     while ((ch = in.get()) != EOF && ch != delim)
-        str.push_back(ch);
+        str.push_back(static_cast<char>(ch));
     return in;
 };
 
@@ -163,7 +163,7 @@ std::basic_istream<CharT, Traits> &getall(std::basic_istream<CharT, Traits> &in,
     int ch;
     str.clear();
     while ((ch = in.get()) != EOF)
-        str.push_back(ch);
+        str.push_back(static_cast<char>(ch));
     return in;
 };
 
@@ -172,5 +172,21 @@ typedef mybasic_string<wchar_t>  mywstring;
 typedef mybasic_string<char16_t> myu16string;
 typedef mybasic_string<char32_t> myu32string;
 
+inline bool isspace32(char32_t ch) {
+	return ch == ' ' || (ch >= '\t' && ch <= '\r');
+}
+
+inline bool isdigit32(char32_t ch) {
+	return ch >= '0' && ch <= '9';
+}
+
+
+inline bool isupper32(char32_t ch) {
+	return ch >= 'A' && ch <= 'Z';
+}
+
+inline char32_t tolower32(char32_t ch) {
+	return isupper32(ch) ? ch - 'A' + 'a' : ch;
+}
 
 #endif //HTML_PARSER_MYSTRING_H
