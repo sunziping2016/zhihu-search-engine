@@ -38,6 +38,7 @@ public:
         states = other.states;
         capacity = other.capacity;
         index = other.index;
+        return *this;
     }
     void swap(iterator &other) {
         value_type *temp_items = other.items;
@@ -166,11 +167,20 @@ template<typename Key, typename Hash = myhash<Key>, typename KeyEqual = myequal_
 class myhashset {
 public:
     typedef Key                                                             value_type;
+    typedef myhashset<value_type, Hash, KeyEqual, Allocator>                hashset_type;
     typedef myhashset_iterator<value_type, Hash, KeyEqual, Allocator>       iterator;
     typedef myhashset_iterator<const value_type, Hash, KeyEqual, Allocator> const_iterator;
 
     explicit myhashset(const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
             : m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(hash), equal(equal), alloc(alloc) {}
+    myhashset(const hashset_type &other)
+            :m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(other.hash), equal(other.equal), alloc(other.alloc) {
+        insert(other.begin(), other.end());
+    }
+    hashset_type &operator = (const hashset_type &other) {
+        insert(other.begin(), other.end());
+        return *this;
+    }
     template <typename InputIterator>
     myhashset(InputIterator first, InputIterator last, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
             :m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(hash), equal(equal), alloc(alloc) {
