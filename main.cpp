@@ -27,12 +27,10 @@ struct zhihu_content {
 };
 
 int main() {
-    thread_pool threads(2 * std::thread::hardware_concurrency());
+    thread_pool threads;
 
     trie_tree dictionary;
-    size_t max_key_length = 0;
-
-    std::future<bool> dictionary_loaded = threads.enqueue([&dictionary, &max_key_length] {
+    std::future<bool> dictionary_loaded = threads.enqueue([&dictionary] {
         // Load dictionary
         mystring line;
         ifstream dict_file("dictionary.dic");
@@ -111,7 +109,7 @@ int main() {
         zhihu_content *result = infos[i].get();
         if (!result)
             continue;
-        results.push_back(threads.enqueue([result, &filenames, i, &dictionary, max_key_length] {
+        results.push_back(threads.enqueue([result, &filenames, i, &dictionary] {
             mystring basename = filenames[i].substr(0, filenames[i].find(".")),
                     word_filename = "output" PATH_SEPARATOR + basename + ".txt";
             ofstream word_file(word_filename.c_str());
