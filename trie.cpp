@@ -19,8 +19,8 @@ bool trie_tree::insert(const myu32string &str, size_t pos, size_t len) {
     for (size_t i = pos, end = pos + len; i < end; ++i) {
         trie_tree_node::map_type::iterator iter = temp->children.find(str[i]);
         if (iter == temp->children.end())
-            iter = temp->children.insert(mymake_pair(str[i], trie_tree_node())).first;
-        temp = &(*iter).second;
+            iter = temp->children.insert(mymake_pair(str[i], new trie_tree_node)).first;
+        temp = (*iter).second;
     }
     if (temp->is_key)
         return false;
@@ -43,7 +43,7 @@ size_t trie_tree::match(const myu32string &str, size_t pos) {
         trie_tree_node::map_type::iterator iter = temp->children.find(str[i]);
         if (iter == temp->children.end())
             break;
-        temp = &(*iter).second;
+        temp = (*iter).second;
         ++i;
     }
     return longest_match - pos;
@@ -59,4 +59,9 @@ trie_tree::trie_tree_node &trie_tree::trie_tree_node::operator = (const trie_tre
     is_key = other.is_key;
     children = other.children;
     return *this;
+}
+
+trie_tree::trie_tree_node::~trie_tree_node() {
+    for (map_type::const_iterator iter = children.begin(); iter != children.end(); ++iter)
+        delete iter->second;
 }

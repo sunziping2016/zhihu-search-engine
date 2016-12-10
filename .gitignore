@@ -1,5 +1,6 @@
 .idea/
 input/
+input-example/
 output/
 cmake-build-*/
 html_parser

@@ -22,11 +22,12 @@ public:
 
 private:
     struct trie_tree_node {
-        typedef myhashmap<char32_t, trie_tree_node> map_type;
+        typedef myhashmap<char32_t, trie_tree_node *> map_type;
 
         trie_tree_node();
         //trie_tree_node(trie_tree_node &&other);
         //trie_tree_node &operator = (trie_tree_node &&other);
+        ~trie_tree_node();
         trie_tree_node(const trie_tree_node &other);
         trie_tree_node &operator = (const trie_tree_node &other);
 
