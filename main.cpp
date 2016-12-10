@@ -53,11 +53,10 @@ int main() {
     });
 
     myvector<mystring> filenames(mydir("input"));
-    atomic_ulong parsed_cnt(0), split_cnt(0), total_cnt(filenames.size());
 
     myvector<std::future<zhihu_content *> > infos;
     for (auto &filename: filenames) {
-         infos.push_back(threads.enqueue([&filename, &parsed_cnt, &total_cnt]() -> zhihu_content * {
+         infos.push_back(threads.enqueue([&filename]() -> zhihu_content * {
              mystring input_filename = "input" PATH_SEPARATOR + filename,
                      basename = filename.substr(0, filename.find(".")),
                      info_filename = "output" PATH_SEPARATOR + basename + ".info";
@@ -84,9 +83,13 @@ int main() {
              }
              // Parse information
              zhihu_content *result = new zhihu_content;
-             result->headline = dom.find("h1")->text();
-             result->question = dom.find("h2")->text();
-             result->author = dom.find(html_selector("span").class_("author"))->text();
+             html_node *headline = dom.find("h1"), *question = dom.find("h2"), *author = dom.find(html_selector("span").class_("author"));
+             if (headline)
+                 result->headline = headline->text();
+             if (question)
+                 result->question = question->text();
+             if (author)
+                 result->author = author->text();
              if (!result->author.empty() && result->author.back() == L'\uff0c') // Extra comma
                  result->author.pop_back();
              html_result contents = dom.find_all(html_selector("div").class_("content"));
@@ -112,7 +115,7 @@ int main() {
         zhihu_content *result = infos[i].get();
         if (!result)
             continue;
-        results.push_back(threads.enqueue([result, &filenames, i, &dictionary, max_key_length, &split_cnt, &total_cnt] {
+        results.push_back(threads.enqueue([result, &filenames, i, &dictionary, max_key_length] {
             mystring basename = filenames[i].substr(0, filenames[i].find(".")),
                     word_filename = "output" PATH_SEPARATOR + basename + ".txt";
             ofstream word_file(word_filename.c_str());
