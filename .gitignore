@@ -4,3 +4,9 @@ input-example/
 output/
 cmake-build-*/
 html_parser
+
+# Visual Studio 2017
+html_parser.pdb
+html_parser.exe
+CMakeSettings.json
+.vs
