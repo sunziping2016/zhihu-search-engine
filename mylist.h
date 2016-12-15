@@ -12,7 +12,7 @@ public:
     T *data;
     Allocator alloc;
 
-    mylist_node(const Allocator &a) : prev(NULL), next(NULL), data(NULL), alloc(a) {}
+    explicit mylist_node(const Allocator &a) : prev(NULL), next(NULL), data(NULL), alloc(a) {}
     mylist_node(const T &orig, const Allocator &a) : prev(NULL), next(NULL), alloc(a) {
         data = alloc.allocate(1);
         alloc.construct(data, orig);

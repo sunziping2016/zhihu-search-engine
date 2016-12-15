@@ -43,6 +43,10 @@ struct myhash<Key *> {
     }
 };
 
+template<typename T>
+inline const T &mymax(const T &a, const T &b) {
+    return a > b ? a : b;
+}
 
 TRIVIAL_HASH(char)
 TRIVIAL_HASH(wchar_t)

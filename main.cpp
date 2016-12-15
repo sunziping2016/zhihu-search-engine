@@ -39,19 +39,19 @@ int main() {
     myvector<std::future<zhihu_content *> > infos;
     for (auto &filename: filenames) {
         infos.push_back(threads.enqueue([&filename]() -> zhihu_content * {
-            mystring input_filename = "input" PATH_SEPARATOR + filename,
-                    basename = filename.substr(0, filename.find(".")),
-                    info_filename = "output" PATH_SEPARATOR + basename + ".info";
+            mystring input_filename = "input" PATH_SEPARATOR + filename;//,
+            //        basename = filename.substr(0, filename.find(".")),
+            //        info_filename = "output" PATH_SEPARATOR + basename + ".info";
             ifstream html_file(input_filename.c_str());
             if (!html_file) {
                 cerr << ("Error opening \"" + input_filename + "\"\n");
                 return nullptr;
             }
-            ofstream info_file(info_filename.c_str());
-            if (!info_file) {
-                cerr << ("Error creating \"" + info_filename + "\"\n");
-                return nullptr;
-            }
+            //ofstream info_file(info_filename.c_str());
+            //if (!info_file) {
+            //    cerr << ("Error creating \"" + info_filename + "\"\n");
+            //    return nullptr;
+            //}
             // Build dom tree
             html_dom dom;
             try {
@@ -83,10 +83,10 @@ int main() {
                 }
             }
             // Output information
-            info_file << utf32_to_utf8(result->headline) << '\n'
-                      << utf32_to_utf8(result->question) << '\n'
-                      << utf32_to_utf8(result->author) << '\n'
-                      << utf32_to_utf8(result->content);
+            //info_file << utf32_to_utf8(result->headline) << '\n'
+            //          << utf32_to_utf8(result->question) << '\n'
+            //          << utf32_to_utf8(result->author) << '\n'
+            //          << utf32_to_utf8(result->content);
             return result;
         }));
     }
