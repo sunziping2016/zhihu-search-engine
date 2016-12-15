@@ -1,12 +1,15 @@
 .idea/
-input/
-input-example/
-output/
 cmake-build-*/
-html_parser
+bin/input/
+bin/input-example/
+bin/output/
+bin/html_parser
 
 # Visual Studio 2017
-html_parser.pdb
-html_parser.exe
+bin/html_parser.pdb
+bin/html_parser.exe
 CMakeSettings.json
 .vs
+
+# Gui
+node_modules/

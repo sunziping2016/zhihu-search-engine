@@ -1,5 +1,8 @@
 # About
 
+This project is meant to build a small search engine for [zhihu.com](https://zhihu.com) as my *Data Structure
+and Algorithm* homework. It consists of following two parts.
+
 ## First Part - Parse HTML and Perform Word Splitting
 Yeah, this project may best explain what reinventing the wheel means. :) As it is my homework for
 *Data Structure and Algorithm*, I'm not allowed to use any STL or `std::string`-liked standard components.
@@ -14,13 +17,11 @@ I've implemented these following things:
 * `mystack`: stack adaptor similar to `std::stack`
 * `mypair`: simple pair similar to `std::pair`
 
-And I am going to implement the following things:
-
-Every container has its corresponding iterator. And everything is compatible with STL. However,
-due to the low version of teaching assistant's c++ compiling environment, I'm afraid that I
+Every container has its corresponding iterator as well as const iterator. And everything is compatible with STL.
+However, due to the low version of teaching assistant's c++ compiling environment, I'm afraid that I
 couldn't use C++ 11 or any version later.
 
-Well, finally I'll use these to implement a html parser providing some interface similar to
+Well, finally I've used these to implement a html parser providing some interface similar to
 `BeautifulSoap` and a quite simple word separation algorithm.
 
 ## Second Part - Create Inverted Index for Web Search

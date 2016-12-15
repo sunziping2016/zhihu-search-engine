@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel='stylesheet' type='text/css' href="index.css">
+        <title>Sun's App - Tiny Search Engine</title>
+    </head>
+    <body>
+        <div id="result-page">
+            <div id="result-page-header">
+                <div class="small-logo">
+                    <a href="index.html"><span class="google-blue">S</span><span class="google-red">u</span><span class="google-yellow">n</span><span class="google-blue">l</span><span class="google-green">a</span><span class="google-red">b</span></a>
+                </div>
+                <input type="text" class="search-textarea">
+            </div>
+            <div id="result-statistics">
+                0 results (0 seconds)
+            </div>
+        </div>
+        <script>
+            const $ = require('jquery');
+            const parsed = require('query-string').parse(location.search);
+            const shell = require('electron').shell;
+            $('.search-textarea').val(parsed.query)
+            $('a.external').click(function(event) {
+                event.preventDefault();
+                shell.openExternal($(this).attr('href'));
+            });
+            var ffi = require('ffi');
+
+            var libtest = ffi.Library('./libtest_dll.so', {
+              'hello': [ 'uint64', [ 'string' ] ]
+            });
+            console.log("num=" + libtest.hello('我亲爱的一一'));
+        </script>
+    </body>
+</html>
