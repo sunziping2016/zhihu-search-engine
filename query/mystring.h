@@ -13,26 +13,20 @@
 template<typename CharT, typename Traits = std::char_traits<CharT>, typename Allocator = std::allocator<CharT> >
 class mybasic_string: public myvector<CharT> {
 public:
-    typedef mybasic_string<CharT> string_type;
-    typedef myvector<CharT>       vector_type;
+    typedef mybasic_string<CharT, Traits, Allocator> string_type;
+    typedef myvector<CharT>                          vector_type;
 
-    mybasic_string() {}
+    mybasic_string() = default;
+    mybasic_string(const string_type &other) = default;
+    string_type &operator = (const string_type &other) = default;
+    mybasic_string(string_type &&other) = default;
+    string_type &operator = (string_type &&other) = default;
     template <class InputIterator>
     mybasic_string(InputIterator first, InputIterator last) : vector_type(first, last) {}
     template<typename CharT2>
     mybasic_string(const CharT2 *s) {
         while (*s)
             this->push_back(*s++);
-    }
-    mybasic_string(const string_type &other) : vector_type(other) {}
-    mybasic_string(string_type &&other) : vector_type(std::move(other)) {}
-    string_type operator = (const string_type &other) {
-        vector_type::operator = (other);
-        return *this;
-    }
-    string_type operator = (string_type &&other) {
-        vector_type::operator = (std::move(other));
-        return *this;
     }
     string_type &operator += (const string_type &x) {
         this->insert(this->end(), x.begin(), x.end());

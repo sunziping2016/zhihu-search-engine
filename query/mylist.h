@@ -12,10 +12,14 @@ public:
     T *data;
     Allocator alloc;
 
-    explicit mylist_node(const Allocator &a) : prev(NULL), next(NULL), data(NULL), alloc(a) {}
-    mylist_node(const T &orig, const Allocator &a) : prev(NULL), next(NULL), alloc(a) {
+    explicit mylist_node(const Allocator &a) : prev(nullptr), next(nullptr), data(nullptr), alloc(a) {}
+    mylist_node(const T &orig, const Allocator &a) : prev(nullptr), next(nullptr), alloc(a) {
         data = alloc.allocate(1);
         alloc.construct(data, orig);
+    }
+    mylist_node(T &&orig, const Allocator &a) : prev(nullptr), next(nullptr), alloc(a) {
+        data = alloc.allocate(1);
+        alloc.construct(data, std::move(orig));
     }
     ~mylist_node() {
         if (data)
@@ -41,13 +45,12 @@ public:
     friend list_type;
     friend const_iterator;
 
-    mylist_iterator() : node(NULL) {}
+    mylist_iterator() : node(nullptr) {}
     mylist_iterator(node_type *node) : node(node) {}
-    mylist_iterator(const iterator &other) : node(other.node) {}
-    mylist_iterator &operator = (const iterator &other) {
-        node = other.node;
-        return *this;
-    }
+    mylist_iterator(const iterator &other) = default;
+    mylist_iterator &operator = (const iterator &other) = default;
+    mylist_iterator(iterator &&other) = default;
+    mylist_iterator &operator = (iterator &&other) = default;
     void swap(iterator &other) {
         node_type *temp = other.node;
         other.node = node;
@@ -100,14 +103,14 @@ public:
     friend list_type;
     friend iterator;
 
-    mylist_iterator() : node(NULL) {}
+    mylist_iterator() : node(nullptr) {}
     mylist_iterator(node_type *node) : node(node) {}
     mylist_iterator(const iterator &other) : node(other.node) {}
-    mylist_iterator(const const_iterator &other) : node(other.node) {}
-    mylist_iterator &operator = (const const_iterator &other) {
-        node = other.node;
-        return *this;
-    }
+    mylist_iterator(const const_iterator &other) = default;
+    mylist_iterator &operator = (const const_iterator &other) = default;
+    mylist_iterator(const_iterator &&other) = default;
+    mylist_iterator &operator = (const_iterator &&other) = default;
+
     void swap(const_iterator &other) {
         node_type *temp = other.node;
         other.node = node;
@@ -180,6 +183,22 @@ public:
     }
     mylist & operator = (const list_type &orig) {
         assign(orig.begin(), orig.end());
+        return *this;
+    }
+    mylist(list_type &&other) : root(other.root), m_size(other.m_size) {
+        other.root = new node_type(alloc);
+        other.root->next = other.root->prev = other.root;
+        other.m_size = 0;
+    }
+    mylist & operator = (list_type &&other) {
+        clear();
+        delete root;
+        root = other.root;
+        m_size = other.m_size;
+        other.root = new node_type(alloc);
+        other.root->next = other.root->prev = other.root;
+        other.m_size = 0;
+        return *this;
     }
     virtual ~mylist() {
         clear();
@@ -204,8 +223,14 @@ public:
     void push_back(const value_type &value) {
         insert(root, new node_type(value, alloc));
     }
+    void push_back(value_type &&value) {
+        insert(root, new node_type(std::move(value), alloc));
+    }
     void push_front(const value_type &value) {
         insert(root->next, new node_type(value, alloc));
+    }
+    void push_front(value_type &&value) {
+        insert(root->next, new node_type(std::move(value), alloc));
     }
     void pop_back() {
         remove(root);
@@ -215,6 +240,11 @@ public:
     }
     iterator insert(iterator iter, const value_type &value) {
         node_type *node = new node_type(value, alloc);
+        insert(iter->node, node);
+        return iterator(node);
+    }
+    iterator insert(iterator iter, value_type &&value) {
+        node_type *node = new node_type(std::move(value), alloc);
         insert(iter->node, node);
         return iterator(node);
     }

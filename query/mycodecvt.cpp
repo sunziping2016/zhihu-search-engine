@@ -12,15 +12,15 @@ myu32string utf8_to_utf32(const mystring &str, std::size_t index) {
 		if (!(ch & 0x80))
 			result.push_back(ch);
 		else if ((ch & 0xe0) == 0xc0 && index < str.size()) {
-			result.push_back(((ch & 0x1f) << 6) + (str[index] & 0x3f));
+			result.push_back((char32_t) (((ch & 0x1f) << 6) + (str[index] & 0x3f)));
 			++index;
 		}
 		else if ((ch & 0xf0) == 0xe0 && index + 1 < str.size()) {
-			result.push_back(((ch & 0x0f) << 12) + ((str[index] & 0x3f) << 6) + (str[index + 1] & 0x3f));
+			result.push_back((char32_t) (((ch & 0x0f) << 12) + ((str[index] & 0x3f) << 6) + (str[index + 1] & 0x3f)));
 			index += 2;
 		}
 		else if ((ch & 0xf8) == 0xf0 && index + 2 < str.size()) {
-			result.push_back(((ch & 0x07) << 18) + ((str[index] & 0x3f) << 12) + ((str[index + 1] & 0x3f) << 6) + (str[index + 2] & 0x3f));
+			result.push_back((char32_t) (((ch & 0x07) << 18) + ((str[index] & 0x3f) << 12) + ((str[index + 1] & 0x3f) << 6) + (str[index + 2] & 0x3f)));
 			index += 3;
 		}
 		else
@@ -34,21 +34,21 @@ mystring utf32_to_utf8(const myu32string &str, std::size_t index) {
 	while (index != str.size()) {
 		char32_t cp = str[index++];
 		if (cp < 0x80)
-			result.push_back((char)cp);
+			result.push_back((char) cp);
 		else if (cp < 0x800) {
-			result.push_back((char)((cp >> 6) | 0xc0));
-			result.push_back((char)((cp & 0x3f) | 0x80));
+			result.push_back((char) ((cp >> 6) | 0xc0));
+			result.push_back((char) ((cp & 0x3f) | 0x80));
 		}
 		else if (cp < 0x10000) {
-			result.push_back((char)((cp >> 12) | 0xe0));
-			result.push_back((char)(((cp >> 6) & 0x3f) | 0x80));
-			result.push_back((char)((cp & 0x3f) | 0x80));
+			result.push_back((char) ((cp >> 12) | 0xe0));
+			result.push_back((char) (((cp >> 6) & 0x3f) | 0x80));
+			result.push_back((char) ((cp & 0x3f) | 0x80));
 		}
 		else {
-			result.push_back((char)((cp >> 18) | 0xf0));
-			result.push_back((char)(((cp >> 12) & 0x3f) | 0x80));
-			result.push_back((char)(((cp >> 6) & 0x3f) | 0x80));
-			result.push_back((char)((cp & 0x3f) | 0x80));
+			result.push_back((char) ((cp >> 18) | 0xf0));
+			result.push_back((char) (((cp >> 12) & 0x3f) | 0x80));
+			result.push_back((char) (((cp >> 6) & 0x3f) | 0x80));
+			result.push_back((char) ((cp & 0x3f) | 0x80));
 		}
 	}
 	return result;
@@ -62,6 +62,7 @@ myu32string input_utf8_to_utf32(std::istream &in)
 		return utf8_to_utf32(temp, 3);
 	return utf8_to_utf32(temp);
 }
+
 void output_utf32_to_utf8(std::ostream &out, const myu32string &text)
 {
 	out << utf32_to_utf8(text);

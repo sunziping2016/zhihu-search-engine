@@ -28,18 +28,13 @@ public:
     friend const_iterator;
 
     myhashset_iterator()
-            : items(NULL), states(NULL), capacity(0), index(0) {}
+            : items(nullptr), states(nullptr), capacity(0), index(0) {}
     myhashset_iterator(value_type *items, std::uint8_t *states, std::size_t capacity, std::size_t index)
             : items(items), states(states), capacity(capacity), index(index) {}
-    myhashset_iterator(const iterator &other)
-            : items(other.items), states(other.states), capacity(other.capacity), index(other.index) {}
-    myhashset_iterator &operator = (const iterator &other) {
-        items = other.items;
-        states = other.states;
-        capacity = other.capacity;
-        index = other.index;
-        return *this;
-    }
+    myhashset_iterator(const iterator &other) = default;
+    myhashset_iterator &operator = (const iterator &other) = default;
+    myhashset_iterator(iterator &&other) = default;
+    myhashset_iterator &operator = (iterator &&other) = default;
     void swap(iterator &other) {
         value_type *temp_items = other.items;
         std::uint8_t *temp_states = other.states;
@@ -101,20 +96,16 @@ public:
     friend iterator;
 
     myhashset_iterator()
-            : items(NULL), states(NULL), capacity(0), index(0) {}
+            : items(nullptr), states(nullptr), capacity(0), index(0) {}
     myhashset_iterator(value_type *items, std::uint8_t *states, std::size_t capacity, std::size_t index)
             : items(items), states(states), capacity(capacity), index(index) {}
     myhashset_iterator(const iterator &other)
             : items(other.items), states(other.states), capacity(other.capacity), index(other.index) {}
-    myhashset_iterator(const const_iterator &other)
-            : items(other.items), states(other.states), capacity(other.capacity), index(other.index) {}
-    myhashset_iterator &operator = (const const_iterator &other) {
-        items = other.items;
-        states = other.states;
-        capacity = other.capacity;
-        index = other.index;
-    }
-    void swap(iterator &other) {
+    myhashset_iterator(const const_iterator &other) = default;
+    myhashset_iterator &operator = (const const_iterator &other) = default;
+    myhashset_iterator(const_iterator &&other) = default;
+    myhashset_iterator &operator = (const_iterator &&other) = default;
+    void swap(const_iterator &other) {
         value_type *temp_items = other.items;
         std::uint8_t *temp_states = other.states;
         std::size_t temp_capacity = other.capacity, temp_index = other.index;
@@ -172,22 +163,47 @@ public:
     typedef myhashset_iterator<const value_type, Hash, KeyEqual, Allocator> const_iterator;
 
     explicit myhashset(const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
-            : m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(hash), equal(equal), alloc(alloc) {}
+            : m_size(0), m_capacity(0), m_begin_index(0), m_items(nullptr), m_states(nullptr), hash(hash), equal(equal), alloc(alloc) {}
     myhashset(const hashset_type &other)
-            :m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(other.hash), equal(other.equal), alloc(other.alloc) {
+            : m_size(0), m_capacity(0), m_begin_index(0), m_items(nullptr), m_states(nullptr), hash(other.hash), equal(other.equal), alloc(other.alloc) {
+        reserve(other.m_capacity);
         insert(other.begin(), other.end());
     }
     hashset_type &operator = (const hashset_type &other) {
+        clear();
+        reserve(other.m_capacity);
         insert(other.begin(), other.end());
+        return *this;
+    }
+    myhashset(hashset_type &&other)
+            : m_size(other.m_size), m_capacity(other.m_capacity), m_begin_index(other.m_begin_index), m_items(other.m_items), m_states(other.m_states), hash(other.hash), equal(other.equal), alloc(other.alloc) {
+        other.m_size = 0;
+        other.m_capacity = 0;
+        other.m_begin_index = 0;
+        other.m_items = nullptr;
+        other.m_states = nullptr;
+    }
+    hashset_type &operator = (hashset_type &&other) {
+        clear();
+        m_size = other.m_size;
+        m_capacity = other.m_capacity;
+        m_begin_index = other.m_begin_index;
+        m_items = other.m_items;
+        m_states = other.m_states;
+        other.m_size = 0;
+        other.m_capacity = 0;
+        other.m_begin_index = 0;
+        other.m_items = nullptr;
+        other.m_states = nullptr;
         return *this;
     }
     template <typename InputIterator>
     myhashset(InputIterator first, InputIterator last, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
-            :m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(hash), equal(equal), alloc(alloc) {
+            : m_size(0), m_capacity(0), m_begin_index(0), m_items(nullptr), m_states(nullptr), hash(hash), equal(equal), alloc(alloc) {
         insert(first, last);
     }
     myhashset(std::initializer_list<value_type> list, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
-            :m_size(0), m_capacity(0), m_begin_index(0), m_items(NULL), m_states(NULL), hash(hash), equal(equal), alloc(alloc) {
+            : m_size(0), m_capacity(0), m_begin_index(0), m_items(nullptr), m_states(nullptr), hash(hash), equal(equal), alloc(alloc) {
         insert(list.begin(), list.end());
     }
     virtual ~myhashset() {
@@ -196,6 +212,11 @@ public:
     mypair<iterator, bool> insert(const value_type &x) {
         maybe_rehash();
         iterator iter = add_member(x);
+        return mymake_pair(iter, iter != end());
+    }
+    mypair<iterator, bool> insert(value_type &&x) {
+        maybe_rehash();
+        iterator iter = add_member(std::move(x));
         return mymake_pair(iter, iter != end());
     }
     template<typename InputIterator>
@@ -230,7 +251,7 @@ public:
         return m_capacity;
     }
     bool empty() const {
-        return size() == 0;
+        return m_size == 0;
     }
 
     iterator begin() {
@@ -303,7 +324,7 @@ public:
     }
 protected:
     void maybe_rehash() {
-        if (m_size > m_capacity * 0.3)
+        if (m_size > m_capacity * 0.5)
             force_rehash();
     }
 
@@ -352,6 +373,36 @@ protected:
         }
         m_states[value] = 1;
         alloc.construct(m_items + value, x);
+        if (value < m_begin_index)
+            m_begin_index = value;
+        ++m_size;
+        return iterator(m_items, m_states, m_capacity, value);
+    }
+    iterator add_member(value_type &&x) {
+        if (m_capacity == 0) {
+            const std::size_t INITIAL_SIZE = 16;
+            m_items = alloc.allocate(INITIAL_SIZE);
+            m_states = new std::uint8_t[INITIAL_SIZE];
+            std::memset(m_states, 0, sizeof(std::uint8_t) * INITIAL_SIZE);
+            m_size = 0;
+            m_capacity = INITIAL_SIZE;
+            m_begin_index = INITIAL_SIZE;
+        }
+        std::size_t value = hash_first(hash(x)), orig_value = value;
+        while (m_states[value] == 1) {
+            if (equal(m_items[value], x))
+                return iterator(m_items, m_states, m_capacity, value);
+            else {
+                value = hash_next(value);
+                if (value == orig_value) {
+                    force_rehash();
+                    value = hash_first(hash(x));
+                    orig_value = value;
+                }
+            }
+        }
+        m_states[value] = 1;
+        alloc.construct(m_items + value, std::move(x));
         if (value < m_begin_index)
             m_begin_index = value;
         ++m_size;

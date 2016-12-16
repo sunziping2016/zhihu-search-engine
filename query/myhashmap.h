@@ -46,6 +46,10 @@ public:
             : hashset_type(first, last, myhashmap_hash<Key, T, Hash>(hash), myhashmap_equal<Key, T, KeyEqual>(equal), alloc) {}
     myhashmap(std::initializer_list<typename hashset_type::value_type> list, const Hash& hash = Hash(), const KeyEqual& equal = KeyEqual(), const Allocator& alloc = Allocator())
             : hashset_type(list.begin(), list.end(), myhashmap_hash<Key, T, Hash>(hash), myhashmap_equal<Key, T, KeyEqual>(equal), alloc) {}
+    myhashmap(const myhashmap &other) = default;
+    myhashmap &operator = (const myhashmap &other) = default;
+    myhashmap(myhashmap &&other) = default;
+    myhashmap &operator = (myhashmap &&other) = default;
 
 
     iterator find(const Key &key) {

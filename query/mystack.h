@@ -9,14 +9,14 @@ public:
     typedef typename Container::reference       reference;
     typedef typename Container::const_reference const_reference;
 
-    explicit mystack(const Container &container = Container())
+    mystack() = default;
+    mystack(const mystack &other) = default;
+    mystack &operator = (const mystack &other) = default;
+    mystack(mystack &&other) = default;
+    mystack &operator = (mystack &&other) = default;
+
+    explicit mystack(const Container &container)
             : m_container(container) {}
-    mystack(const mystack &other)
-            : m_container(other.m_container) {}
-    mystack &operator = (const mystack &other) {
-        m_container = other.m_container;
-        return *this;
-    }
     reference top() {
         return m_container.back();
     }
@@ -31,6 +31,9 @@ public:
     }
     void push(const T &value) {
         m_container.push_back(value);
+    }
+    void push(T &&value) {
+        m_container.push_back(std::move(value));
     }
     void pop() {
         m_container.pop_back();

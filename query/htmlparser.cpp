@@ -90,7 +90,7 @@ static myu32string unescape_html(const myu32string &html, size_t begin, size_t e
 }
 
 
-size_t parse_node(const myu32string &html, size_t index, html_node &parent, html_node &node, int &open_num) {
+size_t html_node::parse_node(const myu32string &html, size_t index, html_node &parent, html_node &node, int &open_num) {
 	size_t end_index;
 	bool no_escape = no_escape_element(parent.m_name);
 	if (starts_with(html, index, "<!--") && !no_escape) { // comment
@@ -313,14 +313,14 @@ ostream &operator << (ostream &out, const html_node &node) {
 		"TEXT",
 		"COMMENT"
 	};
-	out << "{ m_type: " << type_name[node.m_type];
-	if (node.m_type == html_node::TAG) {
-		out << ", m_name: " << utf32_to_utf8(node.m_name);
-		if (!node.m_attrs.empty()) {
+	out << "{ m_type: " << type_name[node.type()];
+	if (node.type() == html_node::TAG) {
+		out << ", m_name: " << utf32_to_utf8(node.name());
+		if (!node.attrs().empty()) {
 			out << ", attr: { ";
-			for (myhashmap<myu32string, myu32string>::const_iterator iter = node.m_attrs.cbegin();
-				iter != node.m_attrs.cend(); ++iter) {
-				if (iter != node.m_attrs.cbegin())
+			for (myhashmap<myu32string, myu32string>::const_iterator iter = node.attrs().cbegin();
+				iter != node.attrs().cend(); ++iter) {
+				if (iter != node.attrs().cbegin())
 					out << ", ";
 				out << utf32_to_utf8(iter->first) << " : " << utf32_to_utf8(iter->second);
 			}
@@ -328,17 +328,17 @@ ostream &operator << (ostream &out, const html_node &node) {
 		}
 	}
 
-	if ((node.m_type == html_node::DOCUMENT || node.m_type == html_node::TAG) && !node.m_children.empty()) {
+	if ((node.type() == html_node::DOCUMENT || node.type() == html_node::TAG) && !node.children().empty()) {
 		out << ", child: [ ";
-		for (size_t i = 0; i < node.m_children.size(); ++i) {
+		for (size_t i = 0; i < node.children().size(); ++i) {
 			if (i != 0)
 				out << ", ";
-			out << *node.m_children[i];
+			out << *node.children()[i];
 		}
 		out << " ]";
 	}
-	if (node.m_type == html_node::COMMENT || node.m_type == html_node::TEXT)
-		out << ", m_text: " << utf32_to_utf8(node.m_text);
+	if (node.type() == html_node::COMMENT || node.type() == html_node::TEXT)
+		out << ", m_text: " << utf32_to_utf8(node.text());
 	out << " }";
 	return out;
 }
@@ -432,18 +432,16 @@ void html_node::clear() {
 }
 
 bool html_selector::match(const html_node *node) const {
-	if (node->m_type != html_node::TAG)
+	if (node->type() != html_node::TAG)
 		return false;
-	if (!m_tag.empty() && m_tag != node->m_name)
+	if (!m_tag.empty() && m_tag != node->name())
 		return false;
 	for (myvector<myu32string>::const_iterator iter = m_classes.cbegin(); iter < m_classes.cend(); ++iter)
-		if (node->m_classes.find(*iter) == node->m_classes.cend())
+		if (node->classes().find(*iter) == node->classes().cend())
 			return false;
 	for (myvector<mypair<myu32string, myu32string> >::const_iterator iter = m_attrs.cbegin(); iter != m_attrs.cend(); ++iter) {
-		myhashmap<myu32string, myu32string>::const_iterator result = node->m_attrs.find(iter->first);
-		if (result == node->m_attrs.cend())
-			return false;
-		if (result->second != iter->second)
+		myhashmap<myu32string, myu32string>::const_iterator result = node->attrs().find(iter->first);
+		if (result == node->attrs().cend() || result->second != iter->second)
 			return false;
 	}
 	return true;

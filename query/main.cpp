@@ -77,7 +77,7 @@ int main() {
             html_result contents = dom.find_all(html_selector("div").class_("content"));
             contents.pop_back();
             for (auto j: contents) {
-                for (auto k: *j) {
+                for (auto k: j->children()) {
                     result->content += k->text();
                     result->content.push_back('\n');
                 }
@@ -90,8 +90,10 @@ int main() {
             return result;
         }));
     }
+
     if (!dictionary_loaded.get())
         return 1;
+
     myvector<std::future<bool> > results;
     for (size_t i = 0; i < filenames.size(); ++i) {
         zhihu_content *result = infos[i].get();

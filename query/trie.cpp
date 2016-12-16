@@ -6,14 +6,6 @@
 
 using namespace std;
 
-trie_tree::trie_tree(const trie_tree &other)
-        : root(other.root) {}
-
-trie_tree &trie_tree::operator = (const trie_tree &other) {
-    root = other.root;
-    return *this;
-}
-
 bool trie_tree::insert(const myu32string &str, size_t pos, size_t len) {
     trie_tree_node *temp = &root;
     for (size_t i = pos, end = pos + len; i < end; ++i) {
@@ -26,10 +18,6 @@ bool trie_tree::insert(const myu32string &str, size_t pos, size_t len) {
         return false;
     temp->is_key = true;
     return true;
-}
-
-bool trie_tree::insert(const myu32string &str, size_t pos) {
-    return insert(str, pos, str.size() - pos);
 }
 
 size_t trie_tree::match(const myu32string &str, size_t pos) {
@@ -47,21 +35,4 @@ size_t trie_tree::match(const myu32string &str, size_t pos) {
         ++i;
     }
     return longest_match - pos;
-}
-
-trie_tree::trie_tree_node::trie_tree_node()
-        : is_key(false) {}
-
-trie_tree::trie_tree_node::trie_tree_node(const trie_tree::trie_tree_node &other)
-        : is_key(other.is_key), children(other.children) {}
-
-trie_tree::trie_tree_node &trie_tree::trie_tree_node::operator = (const trie_tree::trie_tree_node &other) {
-    is_key = other.is_key;
-    children = other.children;
-    return *this;
-}
-
-trie_tree::trie_tree_node::~trie_tree_node() {
-    for (map_type::const_iterator iter = children.begin(); iter != children.end(); ++iter)
-        delete iter->second;
 }

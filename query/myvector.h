@@ -110,9 +110,7 @@ public:
     bool operator == (const vector_type &x) const {
         const_iterator iter1, iter2;
         for (iter1 = cbegin(), iter2 = x.cbegin(); iter1 != cend() && iter2 != x.cend() && *iter1 == *iter2; ++iter1, ++iter2);
-        if (iter1 == cend() && iter2 == x.cend())
-            return true;
-        return false;
+        return iter1 == cend() && iter2 == x.cend();
     }
     bool operator != (const vector_type &x) const {
         return !(*this == x);
@@ -120,9 +118,7 @@ public:
     bool operator < (const vector_type &x) const {
         const_iterator iter1, iter2;
         for (iter1 = cbegin(), iter2 = x.cbegin(); iter1 != cend() && iter2 != x.cend() && *iter1 == *iter2; ++iter1, ++iter2);
-        if (iter2 != x.cend() && (iter1 == cend() || *iter1 < *iter2 ))
-            return true;
-        return false;
+        return iter2 != x.cend() && (iter1 == cend() || *iter1 < *iter2 );
     }
 
     vector_type operator + (const vector_type &x) const {

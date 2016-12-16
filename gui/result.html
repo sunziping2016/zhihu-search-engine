@@ -21,17 +21,17 @@
             const $ = require('jquery');
             const parsed = require('query-string').parse(location.search);
             const shell = require('electron').shell;
-            $('.search-textarea').val(parsed.query)
+            $('.search-textarea').val(parsed.query);
             $('a.external').click(function(event) {
                 event.preventDefault();
                 shell.openExternal($(this).attr('href'));
             });
-            var ffi = require('ffi');
+            const ffi = require('ffi');
 
-            var libtest = ffi.Library('./libtest_dll.so', {
+            const libtest = ffi.Library('./libtest_dll.so', {
               'hello': [ 'uint64', [ 'string' ] ]
             });
-            console.log("num=" + libtest.hello('我亲爱的一一'));
+            console.log("num=" + libtest.hello('一一'));
         </script>
     </body>
 </html>

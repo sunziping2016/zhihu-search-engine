@@ -13,27 +13,45 @@ class html_node;
 
 class html_selector {
 public:
-    html_selector(myu32string tag = "") : m_tag(tag) {}
+    html_selector() = default;
+    html_selector(const html_selector &other) = default;
+    html_selector &operator = (const html_selector &other) = default;
+    html_selector(html_selector &&other) = default;
+    html_selector &operator = (html_selector &&other) = default;
+    html_selector(myu32string tag) : m_tag(tag) {}
     template<typename CharT>
-    html_selector(const CharT * tag) : m_tag(tag) {}
-    html_selector(const html_selector &other)
-            : m_tag(other.m_tag), m_classes(other.m_classes), m_attrs(other.m_attrs) {}
-    html_selector &operator = (const html_selector &other) {
-        m_tag = other.m_tag;
-        m_classes = other.m_classes;
-        m_attrs = other.m_attrs;
-        return *this;
-    }
-    html_selector &id(myu32string x) {
+    html_selector(const CharT *tag) : m_tag(tag) {}
+
+    html_selector &id(const myu32string &x) {
         m_attrs.push_back(mymake_pair("id", x));
         return *this;
     }
-    html_selector &class_(myu32string x) {
+    html_selector &id(myu32string &&x) {
+        m_attrs.push_back(mymake_pair("id", std::move(x)));
+        return *this;
+    }
+    html_selector &class_(const myu32string &x) {
         m_classes.push_back(x);
         return *this;
     }
-    html_selector &attr(myu32string k, myu32string v) {
+    html_selector &class_(myu32string &&x) {
+        m_classes.push_back(std::move(x));
+        return *this;
+    }
+    html_selector &attr(const myu32string &k, const myu32string &v) {
         m_attrs.push_back(mymake_pair(k, v));
+        return *this;
+    }
+    html_selector &attr(myu32string &&k, const myu32string &v) {
+        m_attrs.push_back(mymake_pair(std::move(k), v));
+        return *this;
+    }
+    html_selector &attr(const myu32string &k, myu32string &&v) {
+        m_attrs.push_back(mymake_pair(k, std::move(v)));
+        return *this;
+    }
+    html_selector &attr(myu32string &&k, myu32string &&v) {
+        m_attrs.push_back(mymake_pair(std::move(k), std::move(v)));
         return *this;
     }
 
@@ -47,38 +65,29 @@ private:
 template<typename PNode>
 class basic_html_result: public myvector<PNode> {
 public:
-    basic_html_result() {}
-    basic_html_result(const basic_html_result &other) : myvector<PNode>(other) {}
+    basic_html_result() = default;
+    basic_html_result(const basic_html_result &other) = default;
+    basic_html_result &operator = (const basic_html_result &other) = default;
+    basic_html_result(basic_html_result &&other) = default;
+    basic_html_result &operator = (basic_html_result &&other) = default;
     basic_html_result find_all(const html_selector &selector) const;
     myvector<myu32string> text() const;
     myvector<myu32string> html() const;
+
 };
 
 class html_node {
-    friend class html_selector;
-    friend std::size_t parse_node(const myu32string &html, std::size_t index, html_node &parent, html_node &node, int &open_num);
-    friend std::ostream &operator << (std::ostream &out, const html_node &node);
-
 public:
     enum html_node_type {DOCUMENT, TAG, TEXT, COMMENT};
 
-    html_node() : m_type(DOCUMENT), m_parent(NULL) {}
-    html_node(const myu32string &html) : m_type(DOCUMENT), m_parent(NULL) {
+    html_node() : m_type(DOCUMENT), m_parent(nullptr) {}
+    html_node(const myu32string &html) : m_type(DOCUMENT), m_parent(nullptr) {
         parse(html);
     }
-    html_node(const html_node &other)
-            : m_type(other.m_type), m_name(other.m_name), m_attrs(other.m_attrs),
-              m_parent(other.m_parent), m_children(other.m_children),
-              m_text(other.m_text) {}
-    html_node &operator = (const html_node &other) {
-        m_type     = other.m_type;
-        m_name     = other.m_name;
-        m_attrs    = other.m_attrs;
-        m_parent   = other.m_parent;
-        m_children = other.m_children;
-        m_text   = other.m_text;
-        return *this;
-    }
+    html_node(const html_node &other) = default;
+    html_node &operator = (const html_node &other) = default;
+    html_node(html_node &&other) = default;
+    html_node &operator = (html_node &&other) = default;
     ~html_node() {
         clear();
     }
@@ -107,13 +116,12 @@ public:
     html_node *parent() const {
         return m_parent;
     }
-    myvector<html_node *>::const_iterator begin() const {
-        return m_children.cbegin();
-    };
-    myvector<html_node *>::const_iterator end() const {
-        return m_children.cend();
+    const myvector<html_node *> &children() const {
+        return m_children;
     };
 
+protected:
+    std::size_t parse_node(const myu32string &html, std::size_t index, html_node &parent, html_node &node, int &open_num);
 
 private:
     html_node_type m_type;
