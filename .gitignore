@@ -6,9 +6,8 @@ bin/output/
 bin/html_parser
 
 # Visual Studio 2017
-bin/html_parser.pdb
-bin/html_parser.ilk
-bin/html_parser.exe
+bin/Release
+bin/Debug
 CMakeSettings.json
 .vs
 
