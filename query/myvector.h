@@ -28,6 +28,7 @@ public:
     }
     myvector(const vector_type &x)
             : m_begin(nullptr), m_end(nullptr), m_end_cap(nullptr), m_alloc(x.m_alloc) {
+        reserve(x.size());
         assign(x.begin(), x.end());
     }
     myvector(vector_type &&x)
@@ -104,6 +105,7 @@ public:
         return m_begin[n];
     }
     vector_type &operator += (const vector_type &x) {
+        reserve(size() + x.size());
         insert(end(), x.begin(), x.end());
         return *this;
     }
@@ -120,11 +122,25 @@ public:
         for (iter1 = cbegin(), iter2 = x.cbegin(); iter1 != cend() && iter2 != x.cend() && *iter1 == *iter2; ++iter1, ++iter2);
         return iter2 != x.cend() && (iter1 == cend() || *iter1 < *iter2 );
     }
-
     vector_type operator + (const vector_type &x) const {
         vector_type temp(*this);
+        temp.reserve(temp.size() + x.size());
         temp.insert(temp.end(), x.begin(), x.end());
         return temp;
+    }
+    void reserve(std::size_t new_cap) {
+        if (m_end_cap < m_begin + new_cap) {
+            std::size_t length = size();
+            pointer new_begin = m_alloc.allocate(new_cap);
+            for (std::size_t i = 0; i < length; ++i) {
+                m_alloc.construct(new_begin + i, std::move(m_begin[i]));
+                m_alloc.destroy(m_begin + i);
+            }
+            m_alloc.deallocate(m_begin, capacity());
+            m_begin = new_begin;
+            m_end = m_begin + length;
+            m_end_cap = m_begin + new_cap;
+        }
     }
 
     iterator insert(const_iterator position, const value_type &x) {
@@ -134,18 +150,8 @@ public:
             m_end = m_begin = m_alloc.allocate(INITIAL_SIZE);
             m_end_cap = m_begin + INITIAL_SIZE;
         }
-        if (m_end == m_end_cap) {
-            std::size_t length = size();
-            pointer new_begin = m_alloc.allocate(length * 2);
-            for (std::size_t i = 0; i < length; ++i) {
-                m_alloc.construct(new_begin + i, std::move(m_begin[i]));
-                m_alloc.destroy(m_begin + i);
-            }
-            m_alloc.deallocate(m_begin, length);
-            m_begin = new_begin;
-            m_end = m_begin + length;
-            m_end_cap = m_begin + length * 2;
-        }
+        if (m_end == m_end_cap)
+            reserve(2 * size());
         for (pointer temp = m_end; temp != m_begin + pos; --temp) {
             m_alloc.construct(temp, std::move(*(temp - 1)));
             m_alloc.destroy(temp - 1);
@@ -161,18 +167,8 @@ public:
             m_end = m_begin = m_alloc.allocate(INITIAL_SIZE);
             m_end_cap = m_begin + INITIAL_SIZE;
         }
-        if (m_end == m_end_cap) {
-            std::size_t length = size();
-            pointer new_begin = m_alloc.allocate(length * 2);
-            for (std::size_t i = 0; i < length; ++i) {
-                m_alloc.construct(new_begin + i, std::move(m_begin[i]));
-                m_alloc.destroy(m_begin + i);
-            }
-            m_alloc.deallocate(m_begin, length);
-            m_begin = new_begin;
-            m_end = m_begin + length;
-            m_end_cap = m_begin + length * 2;
-        }
+        if (m_end == m_end_cap)
+            reserve(2 * size());
         for (pointer temp = m_end; temp != m_begin + pos; --temp) {
             m_alloc.construct(temp, std::move(*(temp - 1)));
             m_alloc.destroy(temp - 1);

@@ -174,9 +174,12 @@ inline bool isdigit32(char32_t ch) {
 	return ch >= '0' && ch <= '9';
 }
 
-
 inline bool isupper32(char32_t ch) {
-	return ch >= 'A' && ch <= 'Z';
+    return ch >= 'A' && ch <= 'Z';
+}
+
+inline bool isgraph32(char32_t ch) {
+    return ch >= '!' && ch <= '~';
 }
 
 inline char32_t tolower32(char32_t ch) {

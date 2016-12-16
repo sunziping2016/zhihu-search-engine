@@ -10,7 +10,7 @@ myu32string utf8_to_utf32(const mystring &str, std::size_t index) {
 	while (index != str.size()) {
 		char ch = str[index++];
 		if (!(ch & 0x80))
-			result.push_back(ch);
+			result.push_back((char32_t) ch);
 		else if ((ch & 0xe0) == 0xc0 && index < str.size()) {
 			result.push_back((char32_t) (((ch & 0x1f) << 6) + (str[index] & 0x3f)));
 			++index;
@@ -54,13 +54,34 @@ mystring utf32_to_utf8(const myu32string &str, std::size_t index) {
 	return result;
 }
 
-myu32string input_utf8_to_utf32(std::istream &in)
+/*myu32string input_utf8_to_utf32(std::istream &in)
 {
 	mystring temp;
 	getall(in, temp);
 	if (temp.size() >= 3 && temp[0] == '\xef' && temp[1] == '\xbb' && temp[2] == '\xbf') // BOM character
 		return utf8_to_utf32(temp, 3);
 	return utf8_to_utf32(temp);
+}*/
+
+myu32string input_utf8_to_utf32(std::istream &in)
+{
+    // skip BOM check
+    myu32string result;
+    int ch1, ch2, ch3, ch4;
+
+    while ((ch1 = in.get()) != EOF) {
+        if (!(ch1 & 0x80))
+            result.push_back((char32_t) ch1);
+        else if ((ch1 & 0xe0) == 0xc0 && (ch2 = in.get()) != EOF)
+            result.push_back((char32_t) (((ch1 & 0x1f) << 6) + (ch2 & 0x3f)));
+        else if ((ch1 & 0xf0) == 0xe0 && (ch2 = in.get()) != EOF && (ch3 = in.get()) != EOF)
+            result.push_back((char32_t) (((ch1 & 0x0f) << 12) + ((ch2 & 0x3f) << 6) + (ch3 & 0x3f)));
+        else if ((ch1 & 0xf8) == 0xf0 && (ch2 = in.get()) != EOF && (ch3 = in.get()) != EOF && (ch4 = in.get()) != EOF)
+            result.push_back((char32_t) (((ch1 & 0x07) << 18) + ((ch2 & 0x3f) << 12) + ((ch3 & 0x3f) << 6) + (ch4 & 0x3f)));
+        else
+            break;
+    }
+    return result;
 }
 
 void output_utf32_to_utf8(std::ostream &out, const myu32string &text)
