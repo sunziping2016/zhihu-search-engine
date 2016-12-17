@@ -11,6 +11,11 @@
 #include "mydir.h"
 #include "htmlparser.h"
 
+#if defined(_WIN32)
+#define DllExport   __declspec(dllexport)
+#else
+#define DllExport
+#endif
 using namespace std;
 
 struct zhihu_content {
@@ -63,16 +68,16 @@ mybasic_string<CharT> escape(const mybasic_string<CharT> &str) {
 
 extern "C" {
 
-app *init() {
+DllExport app *init() {
     return new app;
 }
 
-void destroy(app *ins) {
+DllExport void destroy(app *ins) {
     if (ins)
         delete ins;
 }
 
-const char *load_dict(app *ins) {
+DllExport const char *load_dict(app *ins) {
     mutex error_lock;
     mystring error;
     atomic_bool first(true);
@@ -140,7 +145,7 @@ const char *load_dict(app *ins) {
     return cvt_result("{\"okay\":false,\"result\":null,\"message\":\"" + escape(error) + "\"}");
 }
 
-const char *split_words(app *ins, const char *words) {
+DllExport const char *split_words(app *ins, const char *words) {
     myu32string content(utf8_to_utf32(words)), result;
     size_t start = 0;
     bool first = true;
@@ -166,7 +171,7 @@ const char *split_words(app *ins, const char *words) {
     return cvt_result("{\"okay\":true,\"result\":[" + utf32_to_utf8(result) + "]}");
 }
 
-const char *load_htmls(app *ins) {
+DllExport const char *load_htmls(app *ins) {
     mutex error_lock;
     mystring error;
     atomic_bool first(true);
@@ -237,15 +242,15 @@ const char *load_htmls(app *ins) {
     return cvt_result("{\"okay\":true,\"result\":null}");
 }
 
-const char *load_words(app **ins) {
+DllExport const char *load_words(app **ins) {
     return "";
 }
 
-const char *get_str(const char *str) {
+DllExport const char *get_str(const char *str) {
     return str;
 }
 
-void free_str(const char *str) {
+DllExport void free_str(const char *str) {
     delete []str;
 }
 

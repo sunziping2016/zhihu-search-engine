@@ -6,6 +6,8 @@ bin/output/
 bin/query
 bin/query.txt
 bin/result.txt
+gui/query.dll
+gui/libquery.so
 
 # Visual Studio 2017
 bin/Release

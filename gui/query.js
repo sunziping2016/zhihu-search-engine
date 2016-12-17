@@ -4,7 +4,7 @@
 const path = require('path');
 const ref = require('ref');
 const ffi = require('ffi');
-const libquery = ffi.Library(path.join(__dirname, './libquery.so'), {
+const libquery = ffi.Library(path.join(__dirname, './query.dll'), {
     'init':        [ 'pointer', [] ],
     'destroy':     [ 'void',    [ 'pointer'] ],
     'load_dict':   [ 'pointer', [ 'pointer'] ],

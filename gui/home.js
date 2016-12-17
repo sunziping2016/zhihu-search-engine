@@ -14,7 +14,7 @@ if (shared.dict_loaded === null) {
             let index = electron.remote.dialog.showMessageBox({
                 type: 'error',
                 message: err.message,
-                buttons: ['Retry', 'Abort']
+                buttons: ['Retry', 'Cancel']
             });
             if (index == 0)
                 load_dict();
