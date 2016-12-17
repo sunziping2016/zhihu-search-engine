@@ -1,6 +1,13 @@
-const {app, BrowserWindow} = require('electron');
+const {app, dialog, BrowserWindow} = require('electron');
 const path = require('path');
 const url = require('url');
+const libquery = require('./query');
+
+//noinspection JSAnnotator
+global.shared = {
+    query: new libquery(),
+    dict_loaded: null
+};
 
 let win;
 
@@ -17,5 +24,6 @@ app.on('ready', () => {
 });
 
 app.on('window-all-closed', () => {
+    shared.query.destroy();
     app.quit();
-})
+});

@@ -2,7 +2,8 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <link rel='stylesheet' type='text/css' href="index.css">
+        <link rel='stylesheet' href="common.css">
+        <link rel='stylesheet' href="result.css">
         <title>Sun's App - Tiny Search Engine</title>
     </head>
     <body>
@@ -11,27 +12,15 @@
                 <div class="small-logo">
                     <a href="index.html"><span class="google-blue">S</span><span class="google-red">u</span><span class="google-yellow">n</span><span class="google-blue">l</span><span class="google-green">a</span><span class="google-red">b</span></a>
                 </div>
-                <input type="text" class="search-textarea">
+                <form id="search-form" action="result.html" method="get">
+                    <input id="search-textarea" type="text" name="query">
+                </form>
             </div>
             <div id="result-statistics">
                 0 results (0 seconds)
             </div>
         </div>
-        <script>
-            const $ = require('jquery');
-            const parsed = require('query-string').parse(location.search);
-            const shell = require('electron').shell;
-            $('.search-textarea').val(parsed.query);
-            $('a.external').click(function(event) {
-                event.preventDefault();
-                shell.openExternal($(this).attr('href'));
-            });
-            const ffi = require('ffi');
-
-            const libtest = ffi.Library('./libtest_dll.so', {
-              'hello': [ 'uint64', [ 'string' ] ]
-            });
-            console.log("num=" + libtest.hello('一一'));
-        </script>
+        <script src="common.js"></script>
+        <script src="result.js"></script>
     </body>
 </html>

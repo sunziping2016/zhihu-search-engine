@@ -21,6 +21,9 @@ public:
         return insert(str, pos, str.size() - pos);
     }
     std::size_t match(const myu32string &str, std::size_t pos = 0);
+    void clear() {
+        root.clear();
+    }
 
 private:
     struct trie_tree_node {
@@ -32,9 +35,13 @@ private:
         trie_tree_node(trie_tree_node &&other) = default;
         trie_tree_node &operator = (const trie_tree_node &other) = default;
         trie_tree_node &operator = (trie_tree_node &&other) = default;
-        ~trie_tree_node() {
-            for (map_type::const_iterator iter = children.begin(); iter != children.end(); ++iter)
+        void clear() {
+            for (map_type::const_iterator iter = children.cbegin(), end = children.cend(); iter != end; ++iter)
                 delete iter->second;
+            children.clear();
+        }
+        ~trie_tree_node() {
+            clear();
         }
 
         bool is_key;

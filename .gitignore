@@ -3,7 +3,9 @@ cmake-build-*/
 bin/input/
 bin/input-example/
 bin/output/
-bin/html_parser
+bin/query
+bin/query.txt
+bin/result.txt
 
 # Visual Studio 2017
 bin/Release

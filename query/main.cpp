@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <cstring>
+#include <algorithm>
 
 #include "mycodecvt.h"
 #include "mydir.h"
@@ -9,11 +11,6 @@
 #include "trie.h"
 
 using namespace std;
-
-struct zhihu_content {
-    myu32string url, headline, question, author, content;
-    myhashset<myu32string, int> words;
-};
 
 int main() {
     thread_pool threads;
@@ -62,6 +59,11 @@ int main() {
     });
 
     myvector<mystring> filenames(mydir("input"));
+    sort(filenames.begin(), filenames.end());
+
+    struct zhihu_content {
+        myu32string url, headline, question, author, content;
+    };
 
     myvector<std::future<zhihu_content *> > infos;
     for (auto &filename: filenames) {
@@ -115,20 +117,13 @@ int main() {
     if (!dictionary_loaded.get())
         return 1;
 
-    myvector<std::future<bool> > results;
+    myvector<std::future<myvector<myu32string> *> > results;
     for (size_t i = 0; i < filenames.size(); ++i) {
-        zhihu_content *result = infos[i].get();
-        if (!result)
-            continue;
-        results.push_back(threads.enqueue([result, &filenames, i, &dictionary, &stopwords] {
-            mystring basename = filenames[i].substr(0, filenames[i].find(".")),
-                    word_filename = "output" PATH_SEPARATOR + basename + ".txt";
-            ofstream word_file(word_filename.c_str());
-            if (!word_file) {
-                cerr << ("Error creating \"" + word_filename + "\"\n");
-                delete result;
-                return false;
-            }
+        results.push_back(threads.enqueue([i, &infos, &dictionary, &stopwords] () -> myvector<myu32string> * {
+            zhihu_content *result = infos[i].get();
+            if (!result)
+                return nullptr;
+            myvector<myu32string> *words = new myvector<myu32string>;
             size_t start = 0;
             while (start != result->content.size()) {
                 size_t length = stopwords.match(result->content, start);
@@ -140,16 +135,92 @@ int main() {
                         if (!length)
                             ++length;
                     }
-                    word_file << utf32_to_utf8(result->content.substr(start, length)) << '\n';
+                    words->push_back(result->content.substr(start, length));
                 }
                 start += length;
             }
             delete result;
-            return true;
+            return words;
         }));
     }
-    for (auto &i: results)
-        i.get();
+
+    myhashmap<myu32string, size_t *> words;
+    words.reserve(100000);
+    size_t *temp = new size_t[filenames.size()];
+    memset(temp, 0, sizeof(size_t) * filenames.size());
+    for (size_t i = 0; i < filenames.size(); ++i) {
+        myvector<myu32string> *result = results[i].get();
+        for (myvector<myu32string>::const_iterator iter = result->cbegin(); iter != result->cend(); ++iter) {
+            mypair<myhashmap<myu32string, size_t *>::iterator, bool> ret = words.insert(mymake_pair(*iter, temp));
+            if (ret.second) {
+                temp = new size_t[filenames.size()];
+                memset(temp, 0, sizeof(size_t) * filenames.size());
+            }
+            ++ret.first->second[i];
+        }
+        delete result;
+    }
+
+    ifstream query_file("query.txt");
+    ofstream result_file("result.txt");
+    if (!query_file) {
+        cerr << "Error opening \"query.txt\"\n";
+        return 1;
+    }
+    if (!result_file) {
+        cerr << "Error opening \"result.txt\"\n";
+        return 1;
+    }
+    myu32string query = input_utf8_to_utf32(query_file);
+    size_t i, j = 0;
+    if (!query.empty() && query.front() == 0xfeff) // BOM
+        ++j;
+    while ((i = j) < query.size()) {
+        while (j < query.size() && query[j] != '\n')
+            ++j;
+        if (j > i) {
+            size_t *result = new size_t[filenames.size()], *index = new size_t[filenames.size()];
+            memset(result, 0, sizeof(size_t) * filenames.size());
+            for (size_t k = 0; k < filenames.size(); ++k)
+                index[k] = k;
+            myu32string line = query.substr(i, j - i);
+            size_t start = 0;
+            while (start != line.size()) {
+                size_t length = stopwords.match(line, start);
+                if (!length) {
+                    while (start + length != line.size() && isgraph32(line[start + length]))
+                        ++length;
+                    if (!length) {
+                        length = dictionary.match(line, start);
+                        if (!length)
+                            ++length;
+                    }
+                    myhashmap<myu32string, size_t *>::const_iterator res = words.find(line.substr(start, length));
+                    if (res != words.cend()) {
+                        for (size_t k = 0; k < filenames.size(); ++k)
+                            result[k] += res->second[k];
+                    }
+                }
+                start += length;
+            }
+            bool first = true;
+            for (size_t k = 0; k < filenames.size(); ++k) {
+                if (result[k]) {
+                    if (first)
+                        first = false;
+                    else
+                        result_file << " ";
+                    result_file << "(" << (k + 1) << "," << result[k] << ")";
+                }
+            }
+            delete []result;
+            delete []index;
+            result_file << "\n";
+        }
+        ++j;
+    }
+
     //cin.get();
+    // destruct
     return 0;
 }

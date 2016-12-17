@@ -2,38 +2,29 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" href="index.css">
+        <link rel="stylesheet" href="common.css">
+        <link rel="stylesheet" href="home.css">
         <link rel="stylesheet" href="gh-fork-ribbon.css">
         <title>Sun's App - Tiny Search Engine</title>
     </head>
     <body>
-        <a class="github-fork-ribbon right-top external" href="https://github.com/sunziping2016/html-parser" title="Fork me on GitHub">Fork me on GitHub</a>
-        <div id="main-page">
+        <a class="github-fork-ribbon left-top external" href="https://github.com/sunziping2016/html-parser" title="Fork me on GitHub">Fork me on GitHub</a>
+        <div id="home-page">
             <div class="large-logo">
                 <span class="google-blue">S</span><span class="google-red">u</span><span class="google-yellow">n</span><span class="google-blue">l</span><span class="google-green">a</span><span class="google-red">b</span>
             </div>
-            <form action="result.html" id="search-form" method="get">
-                <input type="text" name="query" class="search-textarea" autofocus>
-                <center>
-                    <input value="Sunlab Search" name="search-submit" type="submit" id="search-submit">
-                    <button type="button" id="search-button-lucky">I'am Feeling Unlucky</button>
-                </center>
+            <form id="search-form" action="result.html" method="get">
+                <input id="search-textarea" type="text" name="query" autofocus>
+                <div id="search-buttons">
+                    <button id="search-submit" type="submit">Sunlab Search</button>
+                    <button id="search-button-lucky" type="button">I'am Feeling Unlucky</button>
+                </div>
             </form>
         </div>
         <div id="footer">
-            <span class="copyleft">&copy;</span> 2016 Sun Ziping. Prowdly powered by electron.
+            <span class="copyleft">&copy;</span> 2016 Sun Ziping. Proudly powered by electron.
         </div>
-        <script>
-            const $ = require('jquery');
-            const shell = require('electron').shell;
-            $('#search-form').submit(function(event) {
-                if (!$('.search-textarea').val())
-                    event.preventDefault();
-            });
-            $('a.external').click(function(event) {
-                event.preventDefault();
-                shell.openExternal($(this).attr('href'));
-            });
-        </script>
+        <script src="common.js"></script>
+        <script src="home.js"></script>
     </body>
 </html>

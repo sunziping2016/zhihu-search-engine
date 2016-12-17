@@ -1,0 +1,24 @@
+#result-page {
+    min-width: 650px;
+}
+#result-page-header {
+    background-color: #fafafa;
+    border-bottom: 1px solid #ebebeb;
+    padding: 20px 0;
+}
+
+#search-form {
+    display: inline-block;
+}
+
+#search-textarea {
+    min-width: 500px;
+}
+
+#result-statistics {
+    padding-left: 130px;
+    color: #808080;
+    line-height: 44px;
+    font-family: arial, serif;
+    font-size: 13px;
+}

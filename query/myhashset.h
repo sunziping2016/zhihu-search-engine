@@ -211,13 +211,11 @@ public:
     }
     mypair<iterator, bool> insert(const value_type &x) {
         maybe_rehash();
-        iterator iter = add_member(x);
-        return mymake_pair(iter, iter != end());
+        return add_member(x);
     }
     mypair<iterator, bool> insert(value_type &&x) {
         maybe_rehash();
-        iterator iter = add_member(std::move(x));
-        return mymake_pair(iter, iter != end());
+        return add_member(std::move(x));
     }
     template<typename InputIterator>
     void insert(InputIterator first, InputIterator last) {
@@ -348,7 +346,7 @@ protected:
         delete []old_states;
     }
 
-    iterator add_member(const value_type &x) {
+    mypair<iterator, bool> add_member(const value_type &x) {
         if (m_capacity == 0) {
             const std::size_t INITIAL_SIZE = 16;
             m_items = alloc.allocate(INITIAL_SIZE);
@@ -361,7 +359,7 @@ protected:
         std::size_t value = hash_first(hash(x)), orig_value = value;
         while (m_states[value] == 1) {
             if (equal(m_items[value], x))
-                return iterator(m_items, m_states, m_capacity, value);
+                return mymake_pair(iterator(m_items, m_states, m_capacity, value), false);
             else {
                 value = hash_next(value);
                 if (value == orig_value) {
@@ -376,9 +374,9 @@ protected:
         if (value < m_begin_index)
             m_begin_index = value;
         ++m_size;
-        return iterator(m_items, m_states, m_capacity, value);
+        return mymake_pair(iterator(m_items, m_states, m_capacity, value), true);
     }
-    iterator add_member(value_type &&x) {
+    mypair<iterator, bool> add_member(value_type &&x) {
         if (m_capacity == 0) {
             const std::size_t INITIAL_SIZE = 16;
             m_items = alloc.allocate(INITIAL_SIZE);
@@ -391,7 +389,7 @@ protected:
         std::size_t value = hash_first(hash(x)), orig_value = value;
         while (m_states[value] == 1) {
             if (equal(m_items[value], x))
-                return iterator(m_items, m_states, m_capacity, value);
+                return mymake_pair(iterator(m_items, m_states, m_capacity, value), false);
             else {
                 value = hash_next(value);
                 if (value == orig_value) {
@@ -406,7 +404,7 @@ protected:
         if (value < m_begin_index)
             m_begin_index = value;
         ++m_size;
-        return iterator(m_items, m_states, m_capacity, value);
+        return mymake_pair(iterator(m_items, m_states, m_capacity, value), true);
     }
 
     std::size_t hash_first(std::size_t value) const {
