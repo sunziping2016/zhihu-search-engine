@@ -2,26 +2,44 @@
  * Created by sun on 12/17/16.
  */
 
+if (shared.loaded === null) {
+    $(function() {
+        shared.loaded = false;
+        nprogress.start();
+        query.load((err, res) => {
+            if (err) {
+                nprogress.done();
+                noty({
+                    type: 'error',
+                    text: err.message
+                });
+            } else {
+                shared.loaded = true;
+                nprogress.done();
+            }
+        });
+    });
+}
+
 $('#search-form').submit(function(event) {
-    if (!shared.dict_loaded || !$('#search-textarea').val())
+    if (!shared.loaded || !$('#search-textarea').val())
         event.preventDefault();
 });
 
-if (shared.dict_loaded === null) {
-    shared.dict_loaded = false;
-    let load_dict = () => {query.load_dict((err, res) => {
-        if (err) {
-            let index = electron.remote.dialog.showMessageBox({
-                type: 'error',
-                message: err.message,
-                buttons: ['Retry', 'Cancel']
-            });
-            if (index == 0)
-                load_dict();
-            else
-                electron.remote.app.quit();
-        } else
-            shared.dict_loaded = true;
-    })};
-    $(load_dict);
-}
+$('#search-button-lucky').click(function (event) {
+    let str = $('#search-textarea').val();
+    if (!shared.loaded || !str)
+        return;
+    query.query(str, (err, res) => {
+        if (!res) return;
+        query.get_doc(res[0].id, (err, res) => {
+            if (!res) return;
+            electron.shell.openExternal(res.url);
+        });
+    });
+});
+
+$('a.extern').click(function(event) {
+    event.preventDefault();
+    electron.shell.openExternal($(this).attr('href'));
+});

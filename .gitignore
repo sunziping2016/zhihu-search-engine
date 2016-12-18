@@ -4,6 +4,9 @@ bin/input/
 bin/input-example/
 bin/output/
 bin/query
+bin/search-gui-*/
+bin/gui.sh
+bin/gui.bat
 bin/query.txt
 bin/result.txt
 gui/query.dll

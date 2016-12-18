@@ -15,10 +15,66 @@
     min-width: 500px;
 }
 
+#result-page-content {
+    margin-left: 130px;
+    margin-right: 40px;
+    max-width: 600px;
+}
+
 #result-statistics {
-    padding-left: 130px;
     color: #808080;
     line-height: 44px;
     font-family: arial, serif;
     font-size: 13px;
+}
+
+.search-result + .search-result {
+    margin-top: 26px;
+}
+
+.result-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 18px;
+    font-weight: normal;
+    margin: 0;
+    color: #1a0dab;
+}
+
+.result-title em {
+    font-style: normal;
+    font-weight: bold;
+}
+
+.result-title a:hover {
+    text-decoration: underline;
+}
+
+.result-title a:visited {
+    color: #609;
+}
+
+.result-cite {
+    margin: 0;
+    color: #006621;
+    font-style: normal;
+    font-size: 14px;
+}
+
+.result-content {
+    line-height: 1.4;
+    word-wrap: break-word;
+    color: #545454;
+    font-size: small;
+    text-align: justify;
+    margin: 0;
+}
+
+.result-content em {
+    font-style: normal;
+    color: #dd4b39;
+}
+
+#footer {
+    margin-top: 40px;
 }

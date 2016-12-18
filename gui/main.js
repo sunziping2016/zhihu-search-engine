@@ -3,10 +3,12 @@ const path = require('path');
 const url = require('url');
 const libquery = require('./query');
 
+require('electron-debug')({enabled: true});
+
 //noinspection JSAnnotator
 global.shared = {
     query: new libquery(),
-    dict_loaded: null
+    loaded: null
 };
 
 let win;

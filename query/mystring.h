@@ -161,10 +161,34 @@ std::basic_istream<CharT, Traits> &getall(std::basic_istream<CharT, Traits> &in,
     return in;
 };
 
+#include "mystack.h"
+
+template<typename CharT, typename Traits = std::char_traits<CharT>, typename Allocator = std::allocator<CharT> >
+mybasic_string<CharT, Traits, Allocator> mybasic_to_string(std::size_t num) {
+    mystack<CharT> stack;
+    while (num) {
+        stack.push(num % 10 + '0');
+        num /= 10;
+    }
+    if (stack.empty())
+        return "0";
+    mybasic_string<CharT, Traits, Allocator> result;
+    while (!stack.empty()) {
+        result.push_back(stack.top());
+        stack.pop();
+    }
+    return result;
+};
+
+
 typedef mybasic_string<char>     mystring;
 typedef mybasic_string<wchar_t>  mywstring;
 typedef mybasic_string<char16_t> myu16string;
 typedef mybasic_string<char32_t> myu32string;
+
+inline mystring myto_string(std::size_t num) {
+    return mybasic_to_string<char>(num);
+}
 
 inline bool isspace32(char32_t ch) {
 	return ch == ' ' || (ch >= '\t' && ch <= '\r');

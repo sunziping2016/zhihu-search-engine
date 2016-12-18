@@ -49,8 +49,6 @@ a {
 }
 
 #footer {
-    position: absolute;
-    bottom: 0;
     line-height: 40px;
     text-align: center;
     color: #999;
@@ -61,4 +59,9 @@ a {
 .copyleft {
     display:inline-block;
     transform: rotate(180deg);
+}
+
+.noty_text {
+    font-family: sans-serif;
+    font-weight: normal;
 }

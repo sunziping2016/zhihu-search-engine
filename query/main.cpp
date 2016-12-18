@@ -203,15 +203,16 @@ int main() {
                 }
                 start += length;
             }
+            sort(index, index + filenames.size(), [result] (size_t a, size_t b) {
+                return result[a] > result[b];
+            });
             bool first = true;
-            for (size_t k = 0; k < filenames.size(); ++k) {
-                if (result[k]) {
-                    if (first)
-                        first = false;
-                    else
-                        result_file << " ";
-                    result_file << "(" << (k + 1) << "," << result[k] << ")";
-                }
+            for (size_t k = 0; k < filenames.size() && result[index[k]]; ++k) {
+                if (first)
+                    first = false;
+                else
+                    result_file << " ";
+                result_file << "(" << (index[k] + 1) << "," << result[index[k]] << ")";
             }
             delete []result;
             delete []index;
@@ -219,8 +220,7 @@ int main() {
         }
         ++j;
     }
-
-    //cin.get();
+    // Fixme
     // destruct
     return 0;
 }

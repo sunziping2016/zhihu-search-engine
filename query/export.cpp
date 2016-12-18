@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <algorithm>
 
 #include "threadpool.h"
 #include "trie.h"
@@ -16,28 +17,43 @@
 #else
 #define DllExport
 #endif
+
 using namespace std;
 
 struct zhihu_content {
     myu32string url, headline, question, author, content;
-    myhashset<myu32string, int> words;
+};
+
+myu32string isubstr(const myu32string &str, size_t pos, size_t len) {
+    myu32string result;
+    for (size_t i = pos, end = pos + len; i < str.size() && i < end; ++i)
+        result.push_back(tolower32(str[i]));
+    return result;
 };
 
 struct app {
-    app() = default;
+    app() {
+        words.reserve(100000);
+    }
     app(const app &other) = delete;
     app &operator = (const app &other) = delete;
     app(app &&other) = default;
     app &operator = (app &&other) = default;
-    ~app() {
+    void clear_infos() {
         for (myvector<zhihu_content *>::const_iterator iter = infos.cbegin(); iter < infos.cend(); ++iter)
             if (*iter)
                 delete *iter;
+        infos.clear();
+    }
+    ~app() {
+        // Fixme
+        //clear_infos();
     }
     thread_pool threads;
     trie_tree dictionary, stopwords;
     myvector<mystring> files;
     myvector<zhihu_content *> infos;
+    myhashmap<myu32string, size_t *> words;
 };
 
 inline const char *cvt_result(const mystring &result) {
@@ -77,7 +93,7 @@ DllExport void destroy(app *ins) {
         delete ins;
 }
 
-DllExport const char *load_dict(app *ins) {
+DllExport const char *load(app *ins) {
     mutex error_lock;
     mystring error;
     atomic_bool first(true);
@@ -139,42 +155,8 @@ DllExport const char *load_dict(app *ins) {
 
     stopwords_loaded.get();
     dictionary_loaded.get();
-
-    if (error.empty())
-        return cvt_result("{\"okay\":true,\"result\":null}");
-    return cvt_result("{\"okay\":false,\"result\":null,\"message\":\"" + escape(error) + "\"}");
-}
-
-DllExport const char *split_words(app *ins, const char *words) {
-    myu32string content(utf8_to_utf32(words)), result;
-    size_t start = 0;
-    bool first = true;
-
-    while (start != content.size()) {
-        size_t length = ins->stopwords.match(content, start);
-        if (!length) {
-            while (start + length != content.size() && isgraph32(content[start + length]))
-                ++length;
-            if (!length) {
-                length = ins->dictionary.match(content, start);
-                if (!length)
-                    ++length;
-            }
-            if (first)
-                first = false;
-            else
-                result.push_back(',');
-            result += "\"" + escape(content.substr(start, length)) + "\"";
-        }
-        start += length;
-    }
-    return cvt_result("{\"okay\":true,\"result\":[" + utf32_to_utf8(result) + "]}");
-}
-
-DllExport const char *load_htmls(app *ins) {
-    mutex error_lock;
-    mystring error;
-    atomic_bool first(true);
+    if (!error.empty())
+        return cvt_result("{\"okay\":false,\"result\":null,\"message\":\"" + escape(error) + "\"}");
 
     ins->files = mydir("input");
     myvector<std::future<zhihu_content *> > infos;
@@ -195,13 +177,13 @@ DllExport const char *load_htmls(app *ins) {
             html_dom dom;
             try {
                 dom.parse(input_utf8_to_utf32(html_file));
-            } catch (mystring error) {
+            } catch (mystring err) {
                 error_lock.lock();
                 if (!first)
                     error.push_back('\n');
                 else
                     first = false;
-                error += "Error opening \"" + input_filename + "\"";
+                error += "Error parsing \"" + input_filename + "\":" + err;
                 error_lock.unlock();
                 return nullptr;
             }
@@ -233,17 +215,146 @@ DllExport const char *load_htmls(app *ins) {
         }));
     }
 
-    ins->infos.clear();
-    myvector<std::future<bool> > results;
+    ins->clear_infos();
+    myvector<std::future<myvector<mypair<myu32string, size_t> > *> > results;
     for (size_t i = 0; i < ins->files.size(); ++i) {
         zhihu_content *result = infos[i].get();
         ins->infos.push_back(result);
+        if (!result)
+            continue;
+        results.push_back(ins->threads.enqueue([result, ins] () -> myvector<mypair<myu32string, size_t> > * {
+            myvector<mypair<myu32string, size_t> > *words = new myvector<mypair<myu32string, size_t> >;
+            size_t start = 0;
+            while (start != result->headline.size()) {
+                size_t length = ins->stopwords.match(result->headline, start);
+                if (!length) {
+                    while (start + length != result->headline.size() && isgraph32(result->headline[start + length]))
+                        ++length;
+                    if (!length) {
+                        length = ins->dictionary.match(result->headline, start);
+                        if (!length)
+                            ++length;
+                    }
+                    words->push_back(mymake_pair(isubstr(result->headline, start, length), 50));
+                }
+                start += length;
+            }
+            start = 0;
+            while (start != result->content.size()) {
+                size_t length = ins->stopwords.match(result->content, start);
+                if (!length) {
+                    while (start + length != result->content.size() && isgraph32(result->content[start + length]))
+                        ++length;
+                    if (!length) {
+                        length = ins->dictionary.match(result->content, start);
+                        if (!length)
+                            ++length;
+                    }
+                    words->push_back(mymake_pair(isubstr(result->content, start, length), 1));
+                }
+                start += length;
+            }
+            return words;
+        }));
     }
-    return cvt_result("{\"okay\":true,\"result\":null}");
+
+    ins->words.clear();
+    size_t *temp = new size_t[ins->files.size()];
+    memset(temp, 0, sizeof(size_t) * ins->files.size());
+    for (size_t i = 0; i < ins->files.size(); ++i) {
+        myvector<mypair<myu32string, size_t> > *result = results[i].get();
+        for (myvector<mypair<myu32string, size_t> >::const_iterator iter = result->cbegin(); iter != result->cend(); ++iter) {
+            mypair<myhashmap<myu32string, size_t *>::iterator, bool> ret = ins->words.insert(mymake_pair(iter->first, temp));
+            if (ret.second) {
+                temp = new size_t[ins->files.size()];
+                memset(temp, 0, sizeof(size_t) * ins->files.size());
+            }
+            ret.first->second[i] += iter->second;
+        }
+        delete result;
+    }
+
+    if (error.empty())
+        return cvt_result("{\"okay\":true,\"result\":null}");
+    return cvt_result("{\"okay\":false,\"result\":null,\"message\":\"" + escape(error) + "\"}");
 }
 
-DllExport const char *load_words(app **ins) {
-    return "";
+DllExport const char *split_words(app *ins, const char *words) {
+    myu32string content(utf8_to_utf32(words)), result;
+    size_t start = 0;
+    bool first = true;
+
+    while (start != content.size()) {
+        size_t length = ins->stopwords.match(content, start);
+        if (!length) {
+            while (start + length != content.size() && isgraph32(content[start + length]))
+                ++length;
+            if (!length) {
+                length = ins->dictionary.match(content, start);
+                if (!length)
+                    ++length;
+            }
+            if (first)
+                first = false;
+            else
+                result.push_back(',');
+            result += "\"" + escape(isubstr(content, start, length)) + "\"";
+        }
+        start += length;
+    }
+    return cvt_result("{\"okay\":true,\"result\":[" + utf32_to_utf8(result) + "]}");
+}
+
+DllExport const char *query(app *ins, const char *str) {
+    size_t *result = new size_t[ins->files.size()], *index = new size_t[ins->files.size()];
+    memset(result, 0, sizeof(size_t) * ins->files.size());
+    for (size_t k = 0; k < ins->files.size(); ++k)
+        index[k] = k;
+    myu32string query = utf8_to_utf32(str);
+    size_t start = 0;
+    while (start != query.size()) {
+        size_t length = ins->stopwords.match(query, start);
+        if (!length) {
+            while (start + length != query.size() && isgraph32(query[start + length]))
+                ++length;
+            if (!length) {
+                length = ins->dictionary.match(query, start);
+                if (!length)
+                    ++length;
+            }
+            myhashmap<myu32string, size_t *>::const_iterator res = ins->words.find(isubstr(query, start, length));
+            if (res != ins->words.cend()) {
+                for (size_t k = 0; k < ins->files.size(); ++k)
+                    result[k] += res->second[k];
+            }
+        }
+        start += length;
+    }
+    sort(index, index + ins->files.size(), [result] (size_t a, size_t b) {
+        return result[a] > result[b];
+    });
+    mystring ret;
+    bool first = true;
+    for (size_t k = 0; k < ins->files.size() && result[index[k]]; ++k) {
+        if (first)
+            first = false;
+        else
+            ret.push_back(',');
+        ret += "{\"id\":" + myto_string(index[k]) + ",\"rank\":" + myto_string(result[index[k]]) + "}";
+    }
+    delete []result;
+    delete []index;
+    return cvt_result("{\"okay\":true,\"result\":[" + ret + "]}");
+}
+
+DllExport const char *get_doc(app *ins, std::size_t id) {
+    return cvt_result("{\"okay\":true,\"result\":{"
+            "\"url\":\""    + utf32_to_utf8(escape(ins->infos[id]->url)) + "\","
+            "\"headline\":\"" + utf32_to_utf8(escape(ins->infos[id]->headline)) + "\","
+            "\"question\":\"" + utf32_to_utf8(escape(ins->infos[id]->question)) + "\","
+            "\"author\":\"" + utf32_to_utf8(escape(ins->infos[id]->author)) + "\","
+            "\"content\":\"" + utf32_to_utf8(escape(ins->infos[id]->content)) + "\""
+    "}}");
 }
 
 DllExport const char *get_str(const char *str) {
