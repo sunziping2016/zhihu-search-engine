@@ -4,7 +4,12 @@
 let time_begin = performance.now();
 const parsed = require('query-string').parse(location.search);
 $('#search-textarea').val(parsed.query);
+function openExtern(element, event) {
+    event.preventDefault();
+    electron.shell.openExternal($(element).attr('href'));
+}
 
+const load_trunc = 8;
 const max_content_length = 140;
 const content_before = 20;
 
@@ -22,26 +27,36 @@ query.split_words(parsed.query, (err, res) => {
         }
         return x.replace(re, '<em>$&</em>');
     };
-    query.query(parsed.query, (err, res) => {
-        $('#statistics-count').text(res.length);
-        res.forEach((x, i) => {
-            query.get_doc(x.id, (err, doc) => {
-                $('#result-page-content').append(
-                    `<div class="search-result">
-                    <h3 class="result-title"><a href="${doc.url}" class="extern">${cvt(doc.headline)} - ${doc.author}</a></h3>
+    let element_of_doc = (doc) => {
+        return `<div class="search-result">
+                    <h3 class="result-title"><a href="${doc.url}" onclick="openExtern(this, event);">${cvt(doc.headline)} - ${doc.author}</a></h3>
                     <cite class="result-cite">${doc.url}</cite>
                     <p class="result-content">${cvt(doc.content)}</p>
-                </div>`
-                );
-            });
-        });
-        $(function () {
-            $('a.extern').click(function(event) {
-                event.preventDefault();
-                electron.shell.openExternal($(this).attr('href'));
-            });
-            let time_end = performance.now();
-            $('#statistics-time').text(Math.round((time_end - time_begin) * 1e3) / 1e6);
-        });
+                </div>`;
+    };
+    nprogress.start();
+    query.query(parsed.query, (err, res) => {
+        $('#statistics-count').text(res.length);
+        let time_end = performance.now();
+        $('#statistics-time').text(Math.round((time_end - time_begin) * 1e3) / 1e6);
+        let i = 0;
+        let appendNew = (array) => {
+            return () => {
+                if (!array.length) {
+                    nprogress.done();
+                    return;
+                }
+                let subarray = array.slice(0, load_trunc);
+                subarray.forEach((x) => {
+                    query.get_doc(x.id, (err, doc) => {
+                        $('#result-page-content').append(element_of_doc(doc));
+                        nprogress.set(++i / res.length);
+                        if (x.id == subarray[subarray.length - 1].id)
+                            window.requestAnimationFrame(appendNew(array.slice(load_trunc)));
+                    });
+                });
+            };
+        };
+        window.requestAnimationFrame(appendNew(res));
     });
 });
