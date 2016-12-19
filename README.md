@@ -25,4 +25,8 @@ Well, finally I've used these to implement a html parser providing some interfac
 `BeautifulSoap` and a quite simple word separation algorithm.
 
 ## Second Part - Create Inverted Index for Web Search
+I use trie tree to store the dictionary, and I also use multi-thread to boost peroformance.
+
+As for GUI, I use `electron` with `node-ffi` to power JavaScript with the ability of calling C++ API.
+Most designer of GUI is copied from Google.
 

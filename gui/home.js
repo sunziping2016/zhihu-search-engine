@@ -11,7 +11,7 @@ if (shared.loaded === null) {
                 nprogress.done();
                 noty({
                     type: 'error',
-                    text: err.message
+                    text: err.message.replace('\n', '<br>')
                 });
             } else {
                 shared.loaded = true;

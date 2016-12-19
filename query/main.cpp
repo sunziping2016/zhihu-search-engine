@@ -150,6 +150,8 @@ int main() {
     memset(temp, 0, sizeof(size_t) * filenames.size());
     for (size_t i = 0; i < filenames.size(); ++i) {
         myvector<myu32string> *result = results[i].get();
+        if (!result)
+            continue;
         for (myvector<myu32string>::const_iterator iter = result->cbegin(); iter != result->cend(); ++iter) {
             mypair<myhashmap<myu32string, size_t *>::iterator, bool> ret = words.insert(mymake_pair(*iter, temp));
             if (ret.second) {

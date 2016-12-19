@@ -220,9 +220,9 @@ DllExport const char *load(app *ins) {
     for (size_t i = 0; i < ins->files.size(); ++i) {
         zhihu_content *result = infos[i].get();
         ins->infos.push_back(result);
-        if (!result)
-            continue;
         results.push_back(ins->threads.enqueue([result, ins] () -> myvector<mypair<myu32string, size_t> > * {
+            if (!result)
+                return nullptr;
             myvector<mypair<myu32string, size_t> > *words = new myvector<mypair<myu32string, size_t> >;
             size_t start = 0;
             while (start != result->headline.size()) {
@@ -263,6 +263,8 @@ DllExport const char *load(app *ins) {
     memset(temp, 0, sizeof(size_t) * ins->files.size());
     for (size_t i = 0; i < ins->files.size(); ++i) {
         myvector<mypair<myu32string, size_t> > *result = results[i].get();
+        if (!result)
+            continue;
         for (myvector<mypair<myu32string, size_t> >::const_iterator iter = result->cbegin(); iter != result->cend(); ++iter) {
             mypair<myhashmap<myu32string, size_t *>::iterator, bool> ret = ins->words.insert(mymake_pair(iter->first, temp));
             if (ret.second) {
